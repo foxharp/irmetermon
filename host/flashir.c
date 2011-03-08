@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <time.h>
+#include <sys/time.h>
 
 
 char *me;
@@ -44,37 +44,54 @@ usage(char *me)
 #define match_minute(a, b) (minute(a) == minute(b))
 #define match_ten_minute(a, b) (tenminute(a) == tenminute(b))
 
-void log_minute(time_t now, int watt_hours)
+void
+log_minute(time_t now, int watt_hours)
 {
 }
 
-void log_tenminute(time_t now, int watt_hours)
+void
+log_tenminute(time_t now, int watt_hours)
 {
 }
 
 
-#define NRECENT 8
-static time_t recentavg;
+#define NRECENT 5
+static struct timeval recent[NRECENT];
+static unsigned char r;
 
-void 
-save_recent(time_t t)
+double
+tvdiff(struct timeval *a, struct timeval *b)
 {
-
-    recentavg -= recentavg / NRECENT;
-    recentavg += t;
+    return a->tv_sec - b->tv_sec + (a->tv_usec - b->tv_usec) / 1.e6;
 }
 
-time_t get_recent_avg(void)
+void
+save_recent(struct timeval *tv)
 {
-    return recentavg / NRECENT;
+    static int saved;
+    if (!saved) {
+	int i;
+	for (i = 0; i < NRECENT; i++)
+	    recent[i] = *tv;
+	saved = 1;
+	return;
+    }
+    recent[(++r) % NRECENT] = *tv;
+}
+
+double
+get_recent_avg(void)
+{
+    return tvdiff(&recent[r % NRECENT],
+		  &recent[(r + 1) % NRECENT]) / (NRECENT - 1);
 }
 
 void
 loop(void)
 {
     int i;
-    long l;
-    time_t t;
+    long l, u;
+    struct timeval tv[1];
 
     time_t cur_min = 0;
     time_t cur_tenmin = 0;
@@ -82,38 +99,39 @@ loop(void)
     int tenmin_count = 0;
 
     while (1) {
-	i = scanf("%ld", &l);
-	if (i != 1) {
+	i = scanf("s0x%lx u0x%lx ", &l, &u);
+	if (i != 2) {
 	    fprintf(stderr, "Short or failed read from pipe, quitting\n");
 	    exit(1);
 	}
 
-	t = (time_t)l;
+	tv->tv_sec = (time_t) l;
+	tv->tv_usec = (suseconds_t) u;
 
 	if (cur_min == 0)
-	    cur_min = minute(t);
+	    cur_min = minute(tv->tv_sec);
 	if (cur_tenmin == 0)
-	    cur_tenmin = tenminute(t);
+	    cur_tenmin = tenminute(tv->tv_sec);
 
-	if (cur_min == minute(t)) {
+	if (cur_min == minute(tv->tv_sec)) {
 	    min_count++;
 	} else {
 	    if (min_count)
 		log_minute(cur_min, min_count);
 	    min_count = 1;
-	    cur_min = minute(t);
+	    cur_min = minute(tv->tv_sec);
 	}
 
-	if (cur_tenmin == tenminute(t)) {
+	if (cur_tenmin == tenminute(tv->tv_sec)) {
 	    tenmin_count++;
 	} else {
 	    if (tenmin_count)
 		log_tenminute(cur_tenmin, tenmin_count);
 	    tenmin_count = 1;
-	    cur_tenmin = tenminute(t);
+	    cur_tenmin = tenminute(tv->tv_sec);
 	}
 
-	save_recent(t);
+	save_recent(tv);
     }
 }
 

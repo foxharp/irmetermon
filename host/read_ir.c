@@ -36,7 +36,7 @@
 #include <errno.h>
 #include <termios.h>
 #include <sys/ioctl.h>
-#include <time.h>
+#include <sys/time.h>
 
 
 char *me;
@@ -104,7 +104,11 @@ main(int argc, char *argv[])
 	if (brk != 0) {
 	    fprintf(stderr, "%s: warning, non-zero read: 0x%x\n", me, brk);
 	} else {
-	    printf("%ld\n", (long) time(0));
+	    struct timeval tv;
+	    gettimeofday(&tv, 0);
+	    printf("s0x%lx u0x%lx\n",
+		(unsigned long)tv.tv_sec,
+		(unsigned long)tv.tv_usec);
 	}
     }
 
