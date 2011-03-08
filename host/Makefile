@@ -1,6 +1,6 @@
 
 
-CFLAGS=-Wall
+CFLAGS=-Wall -O
 
 all: read_ir flashir
 
