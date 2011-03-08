@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include <errno.h>
 #include <sys/time.h>
 
@@ -41,23 +42,23 @@ usage(char *me)
 #define minute(s) ((s) / 60)
 #define tenminute(s) ((s) / 600)
 
-#define match_minute(a, b) (minute(a) == minute(b))
-#define match_ten_minute(a, b) (tenminute(a) == tenminute(b))
-
 void
 log_minute(time_t now, int watt_hours)
 {
+    fprintf(stdout, "mins: %lu	%d\n", now, watt_hours);
 }
 
 void
 log_tenminute(time_t now, int watt_hours)
 {
+    fprintf(stdout, "tens: %lu	%d\n", now, watt_hours);
 }
 
 
 #define NRECENT 5
 static struct timeval recent[NRECENT];
 static unsigned char r;
+static int saved_recent;
 
 double
 tvdiff(struct timeval *a, struct timeval *b)
@@ -68,23 +69,44 @@ tvdiff(struct timeval *a, struct timeval *b)
 void
 save_recent(struct timeval *tv)
 {
-    static int saved;
-    if (!saved) {
+    if (!saved_recent) {
 	int i;
 	for (i = 0; i < NRECENT; i++)
 	    recent[i] = *tv;
-	saved = 1;
+	saved_recent = 1;
 	return;
     }
-    recent[(++r) % NRECENT] = *tv;
+    recent[r++ % NRECENT] = *tv;
 }
 
 double
-get_recent_avg(void)
+get_recent_avg_delta(void)
 {
-    return tvdiff(&recent[r % NRECENT],
-		  &recent[(r + 1) % NRECENT]) / (NRECENT - 1);
+    struct timeval tv;
+    gettimeofday(&tv, 0);
+
+    if (!saved_recent)
+	return 0;
+
+    return tvdiff(&tv, &recent[r % NRECENT]) / NRECENT;
 }
+
+double
+get_recent_watts(void)
+{
+    if (!saved_recent)
+	return 0;
+
+    return 3600 / get_recent_avg_delta();
+}
+
+void
+sigusr1_handle(int n)
+{
+    printf("avg delta: %f, watts %f\n",
+	   get_recent_avg_delta(), get_recent_watts());
+}
+
 
 void
 loop(void)
@@ -104,6 +126,8 @@ loop(void)
 	    fprintf(stderr, "Short or failed read from pipe, quitting\n");
 	    exit(1);
 	}
+
+	fprintf(stderr, "got %lx %lx\n", l, u);
 
 	tv->tv_sec = (time_t) l;
 	tv->tv_usec = (suseconds_t) u;
@@ -140,6 +164,8 @@ main(int argc, char *argv[])
 {
 
     me = basename(argv[0]);
+
+    signal(SIGUSR1, sigusr1_handle);
 
     loop();
 
