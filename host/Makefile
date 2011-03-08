@@ -2,10 +2,10 @@
 
 CFLAGS=-Wall -O
 
-all: read_ir flashir
+all: read_ir ir_meterlog
 
 
 
 clean:
-	rm read_ir flashir
+	rm read_ir ir_meterlog
 
