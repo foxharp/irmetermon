@@ -40,19 +40,17 @@
 #include <sys/time.h>
 
 
-// #define LOG_IMMED_DIR "/var/run/ir_meterlog/watts_now"
+// #define LOG_IMMED_DIR "/var/run/irmetermon/watts_now"
 #define LOG_WATTS_NOW_FILE "/tmp/watts_now"
 #define WATTS_NOW_UPDATE_PERIOD 7	// update file this often (seconds)
 #define WATTS_NOW_AVG_PERIOD	15	// using this many seconds of data
 
-// #define LOG_KWH_MINUTE_DIR   "/var/local/irmetermon/"
-#define LOG_KWH_MINUTE_DIR	"/tmp/"
-// #define LOG_KWH_TEN_MINUTE_DIR       "/var/local/irmetermon/"
-#define LOG_KWH_TEN_MINUTE_DIR	"/tmp/"
+// #define LOG_KWH_MINUTE_DIR   "/var/local/irmetermon/minute/"
+#define LOG_KWH_MINUTE_DIR	"/tmp/wH-by-minute/"
+// #define LOG_KWH_TEN_MINUTE_DIR "/var/local/irmetermon/tenminute/"
+#define LOG_KWH_TEN_MINUTE_DIR	"/tmp/wH-by-ten-minute/"
 
-#define minute(s) (((s) / 60) * 60)
-#define tenminute(s) (((s) / 600) * 600)
-
+#define LOG_FILENAME_PATTERN "watt-hours.%y-%m-%d-%A.log"
 
 char *me;
 
@@ -64,7 +62,7 @@ usage(void)
 }
 
 void
-signal_wrap(signo, handler)
+signal_wrapper(signo, handler)
 int signo;
 void (*handler) ();
 {
@@ -77,85 +75,12 @@ void (*handler) ();
     (void) sigaction(signo, &act, &oact);
 }
 
-struct tm *
-localtime_wrap(time_t * t)
-{
-    static time_t last_t;
-    static struct tm local_tm;
 
-    if (*t != last_t) {
-	localtime_r(t, &local_tm);
-	last_t = *t;
-    }
-    return &local_tm;
+/*
+ * immediate consumption ("watts now") support
+ */
 
-}
-
-char *
-log_string(time_t * t)
-{
-    static char date[50];
-    static time_t last_t;
-
-    if (*t != last_t) {
-	strftime(date, sizeof(date), "%D %R", localtime_wrap(t));
-	last_t = *t;
-    }
-    return date;
-}
-
-char *
-minute_log_name(time_t * t)
-{
-    static char name[256];
-    static time_t last_t;
-
-    if (*t != last_t) {
-	strftime(name, sizeof(name),
-		 LOG_KWH_MINUTE_DIR "wH-by-minute.%y-%m-%d.log",
-		 localtime_wrap(t));
-	last_t = *t;
-    }
-    return name;
-}
-
-char *
-tenminute_log_name(time_t * t)
-{
-    static char tenname[256];
-    static time_t tenlast_t;
-
-    if (*t != tenlast_t) {
-	strftime(tenname, sizeof(tenname),
-		 LOG_KWH_TEN_MINUTE_DIR "wH-by-tenminute.%y-%m-%d.log",
-		 localtime_wrap(t));
-	tenlast_t = *t;
-    }
-    return tenname;
-}
-
-void
-log_wH(char *file, time_t now, int watt_hours)
-{
-    FILE *f;
-
-    f = fopen(file, "a");
-    if (!f) {
-	fprintf(stderr, "%s: opening %s: %m\n", me, file);
-	return;
-    }
-
-    fprintf(f, "%s %d\n", log_string(&now), watt_hours);
-    fclose(f);
-}
-
-double
-tvdiff(struct timeval *a, struct timeval *b)
-{
-    return a->tv_sec - b->tv_sec + (a->tv_usec - b->tv_usec) / 1.e6;
-}
-
-#define NRECENT 128		// power of two, big enough to hold as many
+#define NRECENT 128  // power of two, big enough to hold as many
 		     // ticks as we'll ever get in one averaging period.
 static struct timeval recent[NRECENT];
 static unsigned char rcnt;
@@ -193,8 +118,13 @@ get_recent_watts(void)
     double t;
 
     /* math is hard.  we get a tick once per watt-hour, and the ticks
-     * are N seconds apart.  that's (1/N) w-h/second, or (3600/N)
-     * w-h/hour, or 3600/N watts.  */
+     * are N seconds apart.  that's:
+     *	(1/N) w-h per second
+     * or:
+     *  (3600/N) w-h per hour
+     * or:
+     *	(3600/N) watts.
+     */
     t = get_recent_avg_delta();
 
     if (t == 0)
@@ -238,17 +168,147 @@ sigalrm_handle(int n)
 }
 
 
+/*
+ *  logging support
+ */
+
+struct tm *
+localtime_wrapper(time_t t)
+{
+    static time_t last_t;
+    static struct tm local_tm;
+
+    if (t != last_t) {
+	localtime_r(&t, &local_tm);
+	last_t = t;
+    }
+    return &local_tm;
+
+}
+
+char *
+log_string(time_t t)
+{
+    static char date[50];
+    static time_t last_t;
+
+    if (t != last_t) {
+	strftime(date, sizeof(date), "%D %R", localtime_wrapper(t));
+	last_t = t;
+    }
+    return date;
+}
+
+void
+log_wH(char *file, time_t now, int watt_hours)
+{
+    FILE *f;
+
+    f = fopen(file, "a");
+    if (!f) {
+	fprintf(stderr, "%s: opening %s: %m\n", me, file);
+	return;
+    }
+
+    fprintf(f, "%s %d\n", log_string(now), watt_hours);
+    fclose(f);
+}
+
+typedef struct log_info {
+
+  /* initialized: */
+    /* determines what timeslot a given tick is allotted to */
+    time_t (*cur_interval_calc)(time_t *seconds);
+
+    /* choose a logfile name, based on timeslot */
+    char * (*log_name)(time_t seconds);
+
+  /* runtime: */
+    /* current accumulation interval */
+    time_t cur_interval;
+
+    /* what interval did we last log? */
+    time_t last_logged_interval;
+
+    /* accumlated ticks in current interval */
+    int wH_count;
+
+} log_info_t;
+
+time_t
+which_minute(time_t *t) {
+    return ((*t) / 60) * 60;
+}
+
+time_t
+which_ten_minutes(time_t *t) {
+    return ((*t) / 600) * 600;
+}
+
+char *
+minute_log_name(time_t t)
+{
+    static char name[256];
+    static time_t last_t;
+
+    if (t != last_t) {
+	strftime(name, sizeof(name),
+		 LOG_KWH_MINUTE_DIR LOG_FILENAME_PATTERN,
+		 localtime_wrapper(t));
+	last_t = t;
+    }
+    return name;
+}
+
+char *
+ten_minute_log_name(time_t t)
+{
+    static char tenname[256];
+    static time_t tenlast_t;
+
+    if (t != tenlast_t) {
+	strftime(tenname, sizeof(tenname),
+		 LOG_KWH_TEN_MINUTE_DIR LOG_FILENAME_PATTERN,
+		 localtime_wrapper(t));
+	tenlast_t = t;
+    }
+    return tenname;
+}
+
+log_info_t minute_log_info = {
+    cur_interval_calc: which_minute,
+    log_name: minute_log_name,
+};
+
+log_info_t ten_minute_log_info = {
+    cur_interval_calc: which_ten_minutes,
+    log_name: ten_minute_log_name,
+};
+
+void
+interval_log(log_info_t *li, time_t wh_tick_time)
+{
+    if (li->cur_interval == 0)
+	li->cur_interval = li->cur_interval_calc(&wh_tick_time);
+
+    if (li->cur_interval_calc(&wh_tick_time) == li->cur_interval) {
+	li->wH_count++;
+    } else if (li->cur_interval != li->last_logged_interval) {
+	if (li->wH_count) {
+	    log_wH(li->log_name(li->cur_interval), li->cur_interval, li->wH_count);
+	    li->last_logged_interval = li->cur_interval;
+	}
+	li->wH_count = 1;
+	li->cur_interval = li->cur_interval_calc(&wh_tick_time);
+    }
+}
+
 void
 loop(void)
 {
     int i;
     long l, u;
     struct timeval wh_tick[1];
-
-    time_t cur_min = 0,
-	cur_tenmin = 0, min_lastlogged = 0, tenmin_lastlogged = 0;
-    int min_wH = 0;
-    int tenmin_wH = 0;
 
     while (1) {
 	i = scanf(" s0x%lx u0x%lx", &l, &u);
@@ -260,33 +320,13 @@ loop(void)
 	wh_tick->tv_sec = (time_t) l;
 	wh_tick->tv_usec = (suseconds_t) u;
 
-	if (cur_min == 0)
-	    cur_min = minute(wh_tick->tv_sec);
-	if (cur_tenmin == 0)
-	    cur_tenmin = tenminute(wh_tick->tv_sec);
+	/* one-minute logs */
+	interval_log(&minute_log_info, wh_tick->tv_sec);
 
-	if (minute(wh_tick->tv_sec) == cur_min) {
-	    min_wH++;
-	} else if (cur_min != min_lastlogged) {
-	    if (min_wH) {
-		log_wH(minute_log_name(&cur_min), cur_min, min_wH);
-		min_lastlogged = cur_min;
-	    }
-	    min_wH = 1;
-	    cur_min = minute(wh_tick->tv_sec);
-	}
+	/* ten-minute logs */
+	interval_log(&ten_minute_log_info, wh_tick->tv_sec);
 
-	if (tenminute(wh_tick->tv_sec) == cur_tenmin) {
-	    tenmin_wH++;
-	} else if (cur_tenmin != tenmin_lastlogged) {
-	    if (tenmin_wH) {
-		log_wH(tenminute_log_name(&cur_tenmin), cur_tenmin, tenmin_wH);
-		tenmin_lastlogged = cur_tenmin;
-	    }
-	    tenmin_wH = 1;
-	    cur_tenmin = tenminute(wh_tick->tv_sec);
-	}
-
+	/* "instant consumption" data */
 	save_recent(wh_tick);
     }
 }
@@ -300,10 +340,13 @@ main(int argc, char *argv[])
     if (argc > 1)
 	usage();
 
-    signal_wrap(SIGUSR1, sigusr1_handle);
-    signal_wrap(SIGALRM, sigalrm_handle);
+    signal_wrapper(SIGUSR1, sigusr1_handle);
+    signal_wrapper(SIGALRM, sigalrm_handle);
 
     alarm(WATTS_NOW_UPDATE_PERIOD);
+
+    mkdir(LOG_KWH_MINUTE_DIR, 0755);
+    mkdir(LOG_KWH_TEN_MINUTE_DIR, 0755);
 
     loop();
 
