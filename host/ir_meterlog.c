@@ -33,11 +33,16 @@
 
 // #define LOG_IMMED_DIR "/var/run/ir_meterlog/watts_now"
 #define LOG_WATTS_NOW_FILE "/tmp/watts_now"
+#define WATTS_NOW_UPDATE_PERIOD 7  // update file this often (seconds)
+#define WATTS_NOW_AVG_PERIOD	15 // using this many seconds of data
 
 // #define LOG_KWH_MINUTE_DIR   "/var/local/irmetermon/"
 #define LOG_KWH_MINUTE_DIR	"/tmp/"
 // #define LOG_KWH_TEN_MINUTE_DIR       "/var/local/irmetermon/"
 #define LOG_KWH_TEN_MINUTE_DIR	"/tmp/"
+
+#define minute(s) (((s) / 60) * 60)
+#define tenminute(s) (((s) / 600) * 600)
 
 
 char *me;
@@ -49,12 +54,22 @@ usage(char *me)
     exit(1);
 }
 
-#define minute(s) (((s) / 60) * 60)
-#define tenminute(s) (((s) / 600) * 600)
+void
+signal_wrap(signo, handler)
+int signo;
+void (*handler)();
+{
+    struct sigaction act, oact;
 
+    act.sa_handler = handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_RESTART;
+
+    (void)sigaction(signo, &act, &oact);
+}
 
 struct tm *
-c_localtime(time_t * t)
+localtime_wrap(time_t * t)
 {
     static time_t last_t;
     static struct tm local_tm;
@@ -74,7 +89,7 @@ log_string(time_t * t)
     static time_t last_t;
 
     if (*t != last_t) {
-	strftime(date, sizeof(date), "%D %R", c_localtime(t));
+	strftime(date, sizeof(date), "%D %R", localtime_wrap(t));
 	last_t = *t;
     }
     return date;
@@ -89,7 +104,7 @@ minute_log_name(time_t * t)
     if (*t != last_t) {
 	strftime(name, sizeof(name),
 		 LOG_KWH_MINUTE_DIR "wH-by-minute.%y-%m-%d.log",
-		 c_localtime(t));
+		 localtime_wrap(t));
 	last_t = *t;
     }
     return name;
@@ -104,7 +119,7 @@ tenminute_log_name(time_t * t)
     if (*t != tenlast_t) {
 	strftime(tenname, sizeof(tenname),
 		 LOG_KWH_TEN_MINUTE_DIR "wH-by-tenminute.%y-%m-%d.log",
-		 c_localtime(t));
+		 localtime_wrap(t));
 	tenlast_t = *t;
     }
     return tenname;
@@ -125,7 +140,7 @@ log_wH(char *file, time_t now, int watt_hours)
     fclose(f);
 }
 
-#define NRECENT 5
+#define NRECENT 64  // power of two
 static struct timeval recent[NRECENT];
 static unsigned char r;
 static int saved_recent;
@@ -139,35 +154,80 @@ tvdiff(struct timeval *a, struct timeval *b)
 void
 save_recent(struct timeval *tv)
 {
-    if (!saved_recent) {
+    if (0 && !saved_recent) {
 	int i;
 	for (i = 0; i < NRECENT; i++)
 	    recent[i] = *tv;
 	saved_recent = 1;
 	return;
     }
-    recent[r++ % NRECENT] = *tv;
+    recent[++r & (NRECENT-1)] = *tv;  // leave r pointing at most recent entry
+    fprintf(stderr, "saved %d %ld\n", r, recent[r & (NRECENT-1)].tv_sec);
 }
 
 double
 get_recent_avg_delta(void)
 {
+    int i;
     struct timeval tv;
-    gettimeofday(&tv, 0);
+#if BEFORE
+    double avg_recorded;
 
-    if (!saved_recent)
+    if (0 && !saved_recent)
 	return 0;
 
-    return tvdiff(&tv, &recent[r % NRECENT]) / NRECENT;
+    gettimeofday(&tv, 0);
+
+    for (i = 0; i < NRECENT; i++) {
+	if (recent[(r-i) & (NRECENT-1)].tv_sec < tv.tv_sec - 19)
+	    break;
+	fprintf(stderr, "found %d %ld\n", r-i, recent[(r-i) & (NRECENT-1)].tv_sec);
+    }
+    fprintf(stderr, "loop returns %d\n", i);
+
+    if (i <= 1)
+	return 0.0;
+
+    avg_recorded = tvdiff(&recent[r & (NRECENT-1)],
+    			&recent[(r-(i-1)) & (NRECENT-1)]) / (double)i;
+
+    if (avg_recorded > tvdiff(&tv, &recent[r & (NRECENT-1)]))
+	return avg_recorded;
+
+    return tvdiff(&tv, &recent[(r-(i-1)) & (NRECENT-1)]) / (double)(i+1);
+#else
+    gettimeofday(&tv, 0);
+
+    for (i = 0; i < NRECENT; i++) {
+	if (recent[(r-i) & (NRECENT-1)].tv_sec < tv.tv_sec - WATTS_NOW_AVG_PERIOD)
+	    break;
+	fprintf(stderr, "found %d %ld\n", r-i, recent[(r-i) & (NRECENT-1)].tv_sec);
+    }
+    fprintf(stderr, "loop returns %d\n", i);
+
+    return (double)WATTS_NOW_AVG_PERIOD/i;
+
+#endif
 }
 
 double
 get_recent_watts(void)
 {
-    if (!saved_recent)
+    double t;
+
+    if (0 && !saved_recent)
 	return 0;
 
-    return 3600 / get_recent_avg_delta();
+    /* math is hard.  we get a tick once per watt-hour, and the ticks
+     * are N seconds apart.  that's (1/N) w-h/second, or (3600/N)
+     * w-h/hour, or 3600/N watts.
+     */
+    t = get_recent_avg_delta();
+
+    if (t == 0)
+	return 0;
+
+    return 3600.0 / t;
 }
 
 void
@@ -175,6 +235,28 @@ sigusr1_handle(int n)
 {
     printf("avg delta: %f, watts %f\n",
 	   get_recent_avg_delta(), get_recent_watts());
+}
+
+void
+sigalrm_handle(int n)
+{
+    FILE *f;
+
+    // printf("avg delta: %f, watts %f\n",
+    //	   get_recent_avg_delta(), get_recent_watts());
+
+    f = fopen(LOG_WATTS_NOW_FILE ".tmp" , "w");
+    if (!f) {
+	fprintf(stderr, "%s: opening %s: %m\n", me, LOG_WATTS_NOW_FILE ".tmp");
+	return;
+    }
+
+    fprintf(f, "%.2f\n", get_recent_watts());
+    fclose(f);
+    if (rename(LOG_WATTS_NOW_FILE ".tmp", LOG_WATTS_NOW_FILE))
+	fprintf(stderr, "%s: renaming to %s: %m\n", me, LOG_WATTS_NOW_FILE);
+
+    alarm(WATTS_NOW_UPDATE_PERIOD);
 }
 
 
@@ -239,7 +321,10 @@ main(int argc, char *argv[])
 
     me = basename(argv[0]);
 
-    signal(SIGUSR1, sigusr1_handle);
+    signal_wrap(SIGUSR1, sigusr1_handle);
+    signal_wrap(SIGALRM, sigalrm_handle);
+
+    alarm(WATTS_NOW_UPDATE_PERIOD);
 
     loop();
 
