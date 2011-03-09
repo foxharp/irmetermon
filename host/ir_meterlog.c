@@ -27,7 +27,17 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
+#include <time.h>
 #include <sys/time.h>
+
+
+// #define LOG_IMMED_DIR "/var/run/ir_meterlog/watts_now"
+#define LOG_WATTS_NOW_FILE "/tmp/watts_now"
+
+// #define LOG_KWH_MINUTE_DIR	"/var/local/irmetermon/"
+#define LOG_KWH_MINUTE_DIR	"/tmp/"
+// #define LOG_KWH_TEN_MINUTE_DIR	"/var/local/irmetermon/"
+#define LOG_KWH_TEN_MINUTE_DIR	"/tmp/"
 
 
 char *me;
@@ -39,19 +49,34 @@ usage(char *me)
     exit(1);
 }
 
-#define minute(s) ((s) / 60)
-#define tenminute(s) ((s) / 600)
+#define minute(s) (((s) / 60) * 60)
+#define tenminute(s) (((s) / 600) * 600)
+
+
+char *
+date_string(time_t *t)
+{
+    static char date[50];
+    static time_t last_t;
+    struct tm local_tm;
+
+    if (*t != last_t) {
+	strftime(date, sizeof(date), "%D %R", localtime_r(t, &local_tm));
+	last_t = *t;
+    }
+    return date;
+}
 
 void
 log_minute(time_t now, int watt_hours)
 {
-    fprintf(stdout, "mins: %lu	%d\n", now, watt_hours);
+    fprintf(stdout, "mins: %lu %s %d\n", now, date_string(&now), watt_hours);
 }
 
 void
 log_tenminute(time_t now, int watt_hours)
 {
-    fprintf(stdout, "tens: %lu	%d\n", now, watt_hours);
+    fprintf(stdout, "tens: %lu %s %d\n", now, date_string(&now), watt_hours);
 }
 
 
@@ -115,8 +140,10 @@ loop(void)
     long l, u;
     struct timeval tv[1];
 
-    time_t cur_min = 0;
-    time_t cur_tenmin = 0;
+    time_t cur_min = 0,
+	    cur_tenmin = 0,
+	    min_lastlogged = 0,
+	    tenmin_lastlogged = 0;
     int min_count = 0;
     int tenmin_count = 0;
 
@@ -137,20 +164,24 @@ loop(void)
 	if (cur_tenmin == 0)
 	    cur_tenmin = tenminute(tv->tv_sec);
 
-	if (cur_min == minute(tv->tv_sec)) {
+	if (minute(tv->tv_sec) == cur_min) {
 	    min_count++;
-	} else {
-	    if (min_count)
+	} else if (minute(tv->tv_sec) != min_lastlogged) {
+	    if (min_count) {
 		log_minute(cur_min, min_count);
+		min_lastlogged = cur_min;
+	    }
 	    min_count = 1;
 	    cur_min = minute(tv->tv_sec);
 	}
 
-	if (cur_tenmin == tenminute(tv->tv_sec)) {
+	if (tenminute(tv->tv_sec) == cur_tenmin) {
 	    tenmin_count++;
-	} else {
-	    if (tenmin_count)
+	} else if (tenminute(tv->tv_sec) != tenmin_lastlogged) {
+	    if (tenmin_count) {
 		log_tenminute(cur_tenmin, tenmin_count);
+		tenmin_lastlogged = cur_min;
+	    }
 	    tenmin_count = 1;
 	    cur_tenmin = tenminute(tv->tv_sec);
 	}
