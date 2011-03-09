@@ -119,7 +119,7 @@ main(int argc, char *argv[])
 	// exit(1);
     }
 
-    setbuf(stdout, NULL);
+    setlinebuf(stdout);
 
     while (1) {
 	n = read(ir_fd, &brk, 1);

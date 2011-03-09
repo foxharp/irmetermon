@@ -34,9 +34,9 @@
 // #define LOG_IMMED_DIR "/var/run/ir_meterlog/watts_now"
 #define LOG_WATTS_NOW_FILE "/tmp/watts_now"
 
-// #define LOG_KWH_MINUTE_DIR	"/var/local/irmetermon/"
+// #define LOG_KWH_MINUTE_DIR   "/var/local/irmetermon/"
 #define LOG_KWH_MINUTE_DIR	"/tmp/"
-// #define LOG_KWH_TEN_MINUTE_DIR	"/var/local/irmetermon/"
+// #define LOG_KWH_TEN_MINUTE_DIR       "/var/local/irmetermon/"
 #define LOG_KWH_TEN_MINUTE_DIR	"/tmp/"
 
 
@@ -53,32 +53,77 @@ usage(char *me)
 #define tenminute(s) (((s) / 600) * 600)
 
 
+struct tm *
+c_localtime(time_t * t)
+{
+    static time_t last_t;
+    static struct tm local_tm;
+
+    if (*t != last_t) {
+	localtime_r(t, &local_tm);
+	last_t = *t;
+    }
+    return &local_tm;
+
+}
+
 char *
-date_string(time_t *t)
+log_string(time_t * t)
 {
     static char date[50];
     static time_t last_t;
-    struct tm local_tm;
 
     if (*t != last_t) {
-	strftime(date, sizeof(date), "%D %R", localtime_r(t, &local_tm));
+	strftime(date, sizeof(date), "%D %R", c_localtime(t));
 	last_t = *t;
     }
     return date;
 }
 
-void
-log_minute(time_t now, int watt_hours)
+char *
+minute_log_name(time_t * t)
 {
-    fprintf(stdout, "mins: %lu %s %d\n", now, date_string(&now), watt_hours);
+    static char name[256];
+    static time_t last_t;
+
+    if (*t != last_t) {
+	strftime(name, sizeof(name),
+		 LOG_KWH_MINUTE_DIR "wH-by-minute.%y-%m-%d.log",
+		 c_localtime(t));
+	last_t = *t;
+    }
+    return name;
+}
+
+char *
+tenminute_log_name(time_t * t)
+{
+    static char tenname[256];
+    static time_t tenlast_t;
+
+    if (*t != tenlast_t) {
+	strftime(tenname, sizeof(tenname),
+		 LOG_KWH_TEN_MINUTE_DIR "wH-by-tenminute.%y-%m-%d.log",
+		 c_localtime(t));
+	tenlast_t = *t;
+    }
+    return tenname;
 }
 
 void
-log_tenminute(time_t now, int watt_hours)
+log_wH(char *file, time_t now, int watt_hours)
 {
-    fprintf(stdout, "tens: %lu %s %d\n", now, date_string(&now), watt_hours);
-}
+    FILE *f;
 
+    f = fopen(file, "a");
+    if (!f) {
+	fprintf(stderr, "%s: opening %s: %m\n", me, file);
+	return;
+    }
+
+    fprintf(f, "%s %d\n", log_string(&now), watt_hours);
+    fclose(f);
+}
 
 #define NRECENT 5
 static struct timeval recent[NRECENT];
@@ -141,14 +186,12 @@ loop(void)
     struct timeval tv[1];
 
     time_t cur_min = 0,
-	    cur_tenmin = 0,
-	    min_lastlogged = 0,
-	    tenmin_lastlogged = 0;
-    int min_count = 0;
-    int tenmin_count = 0;
+	cur_tenmin = 0, min_lastlogged = 0, tenmin_lastlogged = 0;
+    int min_wH = 0;
+    int tenmin_wH = 0;
 
     while (1) {
-	i = scanf("s0x%lx u0x%lx ", &l, &u);
+	i = scanf(" s0x%lx u0x%lx", &l, &u);
 	if (i != 2) {
 	    fprintf(stderr, "Short or failed read from pipe, quitting\n");
 	    exit(1);
@@ -165,24 +208,24 @@ loop(void)
 	    cur_tenmin = tenminute(tv->tv_sec);
 
 	if (minute(tv->tv_sec) == cur_min) {
-	    min_count++;
-	} else if (minute(tv->tv_sec) != min_lastlogged) {
-	    if (min_count) {
-		log_minute(cur_min, min_count);
+	    min_wH++;
+	} else if (cur_min != min_lastlogged) {
+	    if (min_wH) {
+		log_wH(minute_log_name(&cur_min), cur_min, min_wH);
 		min_lastlogged = cur_min;
 	    }
-	    min_count = 1;
+	    min_wH = 1;
 	    cur_min = minute(tv->tv_sec);
 	}
 
 	if (tenminute(tv->tv_sec) == cur_tenmin) {
-	    tenmin_count++;
-	} else if (tenminute(tv->tv_sec) != tenmin_lastlogged) {
-	    if (tenmin_count) {
-		log_tenminute(cur_tenmin, tenmin_count);
-		tenmin_lastlogged = cur_min;
+	    tenmin_wH++;
+	} else if (cur_tenmin != tenmin_lastlogged) {
+	    if (tenmin_wH) {
+		log_wH(tenminute_log_name(&cur_tenmin), cur_tenmin, tenmin_wH);
+		tenmin_lastlogged = cur_tenmin;
 	    }
-	    tenmin_count = 1;
+	    tenmin_wH = 1;
 	    cur_tenmin = tenminute(tv->tv_sec);
 	}
 
