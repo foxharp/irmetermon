@@ -1,0 +1,49 @@
+
+
+    simple IR pulse detector
+
+
+
+
+
+	  +-----------------------------o  DTR (pin 4)  (held at +5 to +12)
+	  |               |
+	 /               === C (bypass)
+       |/                 |
+       |   Q1             +-------------o  GND (pin 5)
+       |v
+         \
+          |
+          +-----------------------------o  RXD (pin 2)
+          |
+          /       
+          \  R1           +-------------o  GND (pin 5)
+          /               |                           
+          \              === C (bypass)                 
+	  |               |                            
+	  +-----------------------------o  RTS (pin 7)  (held at -5 to -12)
+		      
+
+
+    theory:
+
+	DTR and RTS are programmed to be enabled and disabled
+	    respectively.  these levels remain constant.
+	R1 holds RXD low, until IR light hits phototransistor Q1,
+	    which causes RXD to go high
+
+	as long as the duration of the IR pulse is longer than a
+	single character time, software monitoring the serial input
+	will see a "break" condition on the line for every pulse.
+
+
+    parts:
+	Q1 is one of:
+		    Fairchild QS/QSE1103
+		    Fairchild QSE113
+		    Fairchild QSE122
+
+	R1 is ???
+
+	C are both .1uF bypass caps
+
