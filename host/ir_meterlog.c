@@ -80,16 +80,22 @@ void (*handler) ();
  * immediate consumption ("watts now") support
  */
 
-#define NRECENT 128  // power of two, big enough to hold as many
+#define NAVG 127  // power of two, big enough to hold as many
 		     // ticks as we'll ever get in one averaging period.
-static struct timeval recent[NRECENT];
+static struct timeval recent[NAVG+1];
 static unsigned char rcnt;
 
 void
 save_recent(struct timeval *tv)
 {
     // leave rcnt pointing at most recent entry
-    recent[++rcnt & (NRECENT - 1)] = *tv;
+    recent[++rcnt & NAVG] = *tv;
+}
+
+double
+timeval_diff(struct timeval *a, struct timeval *b)
+{
+    return a->tv_sec - b->tv_sec + (a->tv_usec - b->tv_usec) / 1.e6;
 }
 
 double
@@ -98,18 +104,29 @@ get_recent_avg_delta(void)
     int i;
     struct timeval tv;
     gettimeofday(&tv, 0);
+    double interval;
 
     /* count the ticks in our averaging period */
-    for (i = 0; i < NRECENT; i++) {
-	if (recent[(rcnt - i) & (NRECENT - 1)].tv_sec <
+    for (i = 0; i <= NAVG; i++) {
+#if BEFORE
+	if (recent[(rcnt - i) & NAVG].tv_sec <
 	    (tv.tv_sec - WATTS_NOW_AVG_PERIOD))
 	    break;
+#else
+	interval = timeval_diff(&tv, &recent[(rcnt - i) & NAVG]);
+	if (interval > WATTS_NOW_AVG_PERIOD)
+	    break;
+#endif
     }
 
+    if (i == 0) return 0;
+
+#ifdef BEFORE
     /* 'i' is one too big here, but since by definition the beginning
      * and end of our period each fall in the middle of a tick
      * interval, i think that's okay.  */
-    return (double) WATTS_NOW_AVG_PERIOD / i;
+#endif
+    return interval / (i - 1);
 }
 
 double
