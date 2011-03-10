@@ -111,7 +111,9 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
-    /* set up DTR and RTS with the right polarity */
+    /* set up DTR and RTS with the right polarity:  disable RTS and
+     * enable DTR to leave RTS negative and DTR positive.
+     */
     if (ioctl(ir_fd, TIOCMGET, &modemctl) ||
 	(modemctl &= ~TIOCM_RTS,
 	 modemctl |= TIOCM_DTR, ioctl(ir_fd, TIOCMSET, &modemctl))) {
