@@ -1,49 +1,49 @@
 
 
-    simple IR pulse detector
+    Simple IR pulse detector
 
 
 
+                 +---------------------o  DTR (pin 4)  (held at
+                 |       |                              +5 to +12)
+      IR        /       === C
+     ---->    |/         |
+     ---->    |   Q1     +-------------o  GND (pin 5)
+     ---->    |v
+                \
+                 |
+                 +---------------------o  RXD (pin 2)
+                 |
+                 /
+                 \ R1    +-------------o  GND (pin 5)
+                 /       |
+                 \      === C
+                 |       |
+                 +---------------------o  RTS (pin 7)  (held at
+                                                        -5 to -12)
 
 
-	  +-----------------------------o  DTR (pin 4)  (held at +5 to +12)
-	  |               |
-	 /               === C (bypass)
-       |/                 |
-       |   Q1             +-------------o  GND (pin 5)
-       |v
-         \
-          |
-          +-----------------------------o  RXD (pin 2)
-          |
-          /       
-          \  R1           +-------------o  GND (pin 5)
-          /               |                           
-          \              === C (bypass)                 
-	  |               |                            
-	  +-----------------------------o  RTS (pin 7)  (held at -5 to -12)
-		      
 
+    Theory:
+        DTR and RTS are initialized to enabled and disabled
+            respectively.  These levels then remain constant.
 
-    theory:
+        R1 holds RXD low, until IR light hits phototransistor Q1,
+            which causes RXD to go high
 
-	DTR and RTS are programmed to be enabled and disabled
-	    respectively.  these levels remain constant.
-	R1 holds RXD low, until IR light hits phototransistor Q1,
-	    which causes RXD to go high
+	As long as the duration of the IR pulse is longer than a
+	single character time, software that monitors the serial input
+	will see a "break" condition on the line for every IR pulse. 
+	For example, the character time at 2400 baud (assuming 8 data
+	bits + 1 start bit + 2 stop bits) is 11 * 1/2400 = 4.6ms,
+	which gives a good margin for identifying 10ms pulses.
 
-	as long as the duration of the IR pulse is longer than a
-	single character time, software monitoring the serial input
-	will see a "break" condition on the line for every pulse.
+    Parts:
+        Q1 is a phototransistor, similar to:
+                    Fairchild QSE113
+                    Fairchild QSE122
 
+        R1 is 10K (?)
 
-    parts:
-	Q1 is one of:
-		    Fairchild QS/QSE1103
-		    Fairchild QSE113
-		    Fairchild QSE122
-
-	R1 is ???
-
-	C are both .1uF bypass caps
+        C are both .1uF bypass caps
 
