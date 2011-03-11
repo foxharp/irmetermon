@@ -106,7 +106,7 @@ main(int argc, char *argv[])
      * at 1200 baud, a BREAK is a line assertion that lasts longer
      * than 4.17ms.  we expect the IR LED to assert for 10ms.
      */
-    if (cfsetspeed(newterm, B1200) || tcsetattr(ir_fd, TCSANOW, newterm)) {
+    if (cfsetspeed(newterm, B38400) || tcsetattr(ir_fd, TCSANOW, newterm)) {
 	fprintf(stderr, "%s: setting attributes for tty: %m\n", me);
 	exit(1);
     }
