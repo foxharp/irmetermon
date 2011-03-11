@@ -42,8 +42,13 @@
 
 // #define LOG_IMMED_DIR "/var/run/irmetermon/watts_now"
 #define LOG_WATTS_NOW_FILE "/tmp/watts_now"
-#define WATTS_NOW_UPDATE_PERIOD 7	// update file this often (seconds)
 #define WATTS_NOW_AVG_PERIOD	15	// using this many seconds of data
+#define USE_ALARM 0
+#if USE_ALARM
+#define WATTS_NOW_UPDATE_PERIOD 7	// update file this often (seconds)
+#endif
+
+#define USE_SIGUSR1 0
 
 // #define LOG_KWH_MINUTE_DIR   "/var/local/irmetermon/minute/"
 #define LOG_KWH_MINUTE_DIR	"/tmp/wH-by-minute/"
@@ -51,6 +56,8 @@
 #define LOG_KWH_TEN_MINUTE_DIR	"/tmp/wH-by-ten-minute/"
 
 #define LOG_FILENAME_PATTERN "watt-hours.%y-%m-%d-%A.log"
+
+void write_watts_now(void);
 
 char *me;
 
@@ -61,6 +68,7 @@ usage(void)
     exit(1);
 }
 
+#if USE_ALARM || USE_SIGUSR1
 void
 signal_wrapper(signo, handler)
 int signo;
@@ -74,22 +82,27 @@ void (*handler) ();
 
     (void) sigaction(signo, &act, &oact);
 }
+#endif
 
 
 /*
  * immediate consumption ("watts now") support
  */
 
-#define NAVG 127  // power of two, big enough to hold as many
+#define NSAMP 128  // power of two, big enough to hold as many
 		     // ticks as we'll ever get in one averaging period.
-static struct timeval recent[NAVG+1];
+static struct timeval recent[NSAMP];
 static unsigned char rcnt;
 
 void
 save_recent(struct timeval *tv)
 {
     // leave rcnt pointing at most recent entry
-    recent[++rcnt & NAVG] = *tv;
+    printf("adding sample rcnt %d\n", rcnt);
+    recent[rcnt++ & (NSAMP-1)] = *tv;
+#if ! USE_ALARM
+    write_watts_now();
+#endif
 }
 
 double
@@ -104,28 +117,21 @@ get_recent_avg_delta(void)
     int i;
     struct timeval tv;
     gettimeofday(&tv, 0);
-    double interval;
+    double interval = 0;
 
     /* count the ticks in our averaging period */
-    for (i = 0; i <= NAVG; i++) {
-#if BEFORE
-	if (recent[(rcnt - i) & NAVG].tv_sec <
-	    (tv.tv_sec - WATTS_NOW_AVG_PERIOD))
+    for (i = 0; i < rcnt && i < NSAMP; i++) {
+	// printf("interval %d of %d is %f\n", i, rcnt - 1, interval);
+	interval = timeval_diff(&tv, &recent[(rcnt - 1 - i) & (NSAMP-1)]);
+	if (interval > WATTS_NOW_AVG_PERIOD) {
+	    i++;
 	    break;
-#else
-	interval = timeval_diff(&tv, &recent[(rcnt - i) & NAVG]);
-	if (interval > WATTS_NOW_AVG_PERIOD)
-	    break;
-#endif
+	}
     }
 
-    if (i == 0) return 0;
+    if (i <= 1) return 0;
 
-#ifdef BEFORE
-    /* 'i' is one too big here, but since by definition the beginning
-     * and end of our period each fall in the middle of a tick
-     * interval, i think that's okay.  */
-#endif
+    // printf("dividing  %f  by (%d - 1)\n", interval, i);
     return interval / (i - 1);
 }
 
@@ -167,9 +173,12 @@ write_watts_now(void)
 	fprintf(stderr, "%s: renaming to %s: %m\n", me, LOG_WATTS_NOW_FILE);
     }
 
+#if USE_ALARM
     alarm(WATTS_NOW_UPDATE_PERIOD);
+#endif
 }
 
+#if USE_SIGUSR1
 void
 sigusr1_handle(int n)
 {
@@ -177,12 +186,15 @@ sigusr1_handle(int n)
     printf("avg delta: %f, watts %f\n",
 	   get_recent_avg_delta(), get_recent_watts());
 }
+#endif
 
+#if USE_ALARM
 void
 sigalrm_handle(int n)
 {
     write_watts_now();
 }
+#endif
 
 
 /*
@@ -343,7 +355,7 @@ loop(void)
 	/* ten-minute logs */
 	interval_log(&ten_minute_log_info, wh_tick->tv_sec);
 
-	/* "instant consumption" data */
+	/* save "instant consumption" data */
 	save_recent(wh_tick);
     }
 }
@@ -357,10 +369,13 @@ main(int argc, char *argv[])
     if (argc > 1)
 	usage();
 
+#if USE_SIGUSR1
     signal_wrapper(SIGUSR1, sigusr1_handle);
+#endif
+#if USE_ALARM
     signal_wrapper(SIGALRM, sigalrm_handle);
-
     alarm(WATTS_NOW_UPDATE_PERIOD);
+#endif
 
     mkdir(LOG_KWH_MINUTE_DIR, 0755);
     mkdir(LOG_KWH_TEN_MINUTE_DIR, 0755);
