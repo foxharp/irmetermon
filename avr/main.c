@@ -35,10 +35,21 @@ init_adc(void)
 }
 
 void
-puthex(unsigned char c)
+puthex(unsigned char i)
 {
-    sputchar("0123456789abcdef"[(c >> 4) & 0xf]);
-    sputchar("0123456789abcdef"[(c >> 0) & 0xf]);
+    unsigned char j;
+
+    j = i >> 4;
+    i &= 0xf;
+
+    if (j >= 10)
+	sputchar(j + 'a' - 10);
+    else
+	sputchar(j + '0');
+    if (i >= 10)
+	sputchar(i + 'a' - 10);
+    else
+	sputchar(i + '0');
 }
 
 void
