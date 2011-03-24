@@ -21,12 +21,6 @@ static prog_char banner_s[] = IRMETERMON_VERSION "irmetermon\n";
 typedef unsigned long time_t;
 void tracker(int new);
 
-void
-init_comm(void)
-{
-    suart_init();
-}
-
 
 void
 init_timer(void)
@@ -118,7 +112,8 @@ tracker(int new)
     static time_t up;
     time_t now;
 
-    now = ms_timer();
+    // now = ms_timer();
+    now = 0;  // FIXME
 
     new = moving_avg(new);
 
@@ -134,8 +129,8 @@ tracker(int new)
 int
 main()
 {
-    init_comm();
-    init_adc();
+    suart_init();
+    // init_adc();
     init_timer();
 
     sei();
@@ -143,6 +138,22 @@ main()
 
     for (;;) {
 	wdt_reset();
+	if (kbhit()) {
+	    switch (sgetchar()) {
+	    case 'x':
+		while (!kbhit())
+		    sputs_p("The Quick Brown Fox Jumps Over The Lazy Dog\n");
+		sgetchar();
+		break;
+	    case 'U':
+		while (!kbhit())
+		    sputchar('U');
+		sgetchar();
+		break;
+	    }
+	}
+
+#if LATER
 	cli();
 	if (!stx_active()) {
 	    // only sleep if there's no pulse data to emit
@@ -154,6 +165,7 @@ main()
 	}
 	sei();
 	// fixme emit_pulse_data();
+#endif
     }
 
 }

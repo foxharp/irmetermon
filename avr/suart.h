@@ -39,15 +39,17 @@
 #error
 #endif
 
+#ifndef NO_RECEIVE
 extern volatile u8 srx_done;
 #define kbhit()	(srx_done)	// true if byte received
+u8 sgetchar( void );
+#endif
 
 extern volatile u8 stx_count;
 #define stx_active() (stx_count)
 
 void suart_init( void );
 void sputchar( u8 val );
-u8 sgetchar( void );
 void sputs_p( const prog_char *txt );
 
 
