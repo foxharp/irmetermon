@@ -8,14 +8,18 @@
 #include "common.h"
 #include "suart.h"
 
+#define bit(x) _BV(x)
+
 static prog_char banner_s[] = IRMETERMON_VERSION "irmetermon\n";
 
 #define MS 1000			// or whatever
 #define STEP_UP	     10
 #define STEP_DOWN   -10
 #define PULSE_LEN	10 * MS
-#define AVG_DEPTH 8
+#define AVG_DEPTH 4
 
+typedef unsigned long time_t;
+void tracker(int new);
 
 void
 init_comm(void)
@@ -32,7 +36,21 @@ init_timer(void)
 void
 init_adc(void)
 {
+    // prescalar is 128 (for now -- FIXME)
+    ADCSRA |= bit(ADPS2) | bit(ADPS1) | bit(ADPS0);
+
+    ADMUX |= bit(REFS0) | bit(ADLAR); // use avcc, and get 8-bit results
+
+    ADCSRA |= bit(ADEN);  // enable
+    ADCSRA |= bit(ADIE);  // enable Interrupt
+    ADCSRA |= bit(ADSC);  // start first conversion 
 }
+
+ISR(ADC_vect)
+{
+    tracker(ADCH);
+    ADCSRA |= bit(ADSC);  // next conversion
+} 
 
 void
 puthex(unsigned char i)
@@ -63,7 +81,7 @@ puthex_l(long l)
 
 
 void
-found_pulse(int now)
+found_pulse(time_t now)
 {
     static unsigned long index;
     puthex_l(index);
@@ -75,14 +93,9 @@ found_pulse(int now)
 int
 moving_avg(int val)
 {
-    static int avg, averaging;
+    static int avg;
 
-    if (!averaging) {
-	avg = val * AVG_DEPTH;
-	averaging = 1;
-    } else {
-	avg = avg - (avg / AVG_DEPTH) + val;
-    }
+    avg = avg - (avg / AVG_DEPTH) + val;
 
     return avg / AVG_DEPTH;
 }
@@ -99,23 +112,22 @@ about_time(int went_up, int now)
 
 
 void
-tracker(int new, int now)
+tracker(int new)
 {
-    static int old, tracking;
-    static int up;
+    static int old;
+    static time_t up;
+    time_t now;
+
+    now = ms_timer();
 
     new = moving_avg(new);
 
-    if (!tracking) {
-	old = new;
-	tracking = 1;
-    } else {
-	if (new - old > STEP_UP) {
-	    up = now;
-	} else if (up && about_time(up, now) && (new - old) < STEP_DOWN) {
-	    up = 0;
+    if (new - old > STEP_UP) {
+	up = now;
+    } else if (up && about_time(up, now) && (new - old) < STEP_DOWN) {
+	up = 0;
+	if (now > 100) // don't report until adc and averages have settled.
 	    found_pulse(now);
-	}
     }
 }
 
