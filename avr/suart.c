@@ -33,11 +33,12 @@ suart_init(void)
 {
     OCR1A = TCNT1 + 1;		// force first compare
     TCCR1A = bit(COM1A1) | bit(COM1A0);	// set OC1A high, T1 mode 0
-    TCCR1B = bit(ICNC1) | bit(CS10);	// noise canceler, 1>0 transition,
-    // CLK/1, T1 mode 0
+    STIMSK = bit(OCIE1A);	// enable tx
 #ifdef DO_RECEIVE
+    TCCR1B = bit(ICNC1) | bit(CS10);	// noise canceler, 1>0 transition,
+    					// CLK/1, T1 mode 0
     STIFR = bit(ICF1);		// clear pending interrupt
-    STIMSK = bit(ICIE1) | bit(OCIE1A);	// enable tx and wait for start
+    STIMSK |= bit(ICIE1);	// enable rx and wait for start
 
     srx_done = 0;		// nothing received
 #endif
