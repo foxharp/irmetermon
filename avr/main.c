@@ -10,7 +10,7 @@
 
 #define bit(x) _BV(x)
 
-static prog_char banner_s[] = IRMETERMON_VERSION "irmetermon\n";
+static prog_char banner_s[] = IRMETERMON_VERSION "-irmetermon\n";
 
 #define MS 1000			// or whatever
 #define STEP_UP	     10
@@ -21,10 +21,37 @@ static prog_char banner_s[] = IRMETERMON_VERSION "irmetermon\n";
 typedef unsigned long time_t;
 void tracker(int new);
 
+unsigned long milliseconds;
+#define ms_timer() (milliseconds)
 
 void
 init_timer(void)
 {
+    // suart.c uses the 16 bit timer.  that could change, if XTAL is
+    // slow enough to allow bit rates to be timed in 8 bits.  but the
+    // overhead of the clock interrupt is very low, so we'll just use
+    // the set 8-bit timer0
+    // set up for simple overflow operation
+    TCCR0A = bit(WGM01);  // CTC
+    TCCR0B = bit(CS02) | bit(CS00);   // prescaler is 1024 
+    OCR0A = 244;	// see below
+    TIMSK0 = bit(OCIE0A);
+
+}
+
+ISR(TIM0_OVF_vect)
+{
+    static unsigned char prescale;
+
+    // xtal == 1024    *   244   *   N
+    //       (prescale)  (overflow)
+    // "244" is chosen so N is close to integral for 1Mhz, 8Mhz, 12Mhz, etc.
+#define N  (XTAL / (1024UL * 244UL))
+
+    if ((prescale++ % N) == 0)
+	milliseconds++;
+
+    TIFR0 = bit(OCF0A);
 }
 
 void
@@ -112,8 +139,7 @@ tracker(int new)
     static time_t up;
     time_t now;
 
-    // now = ms_timer();
-    now = 0;  // FIXME
+    now = ms_timer();
 
     new = moving_avg(new);
 
@@ -131,7 +157,7 @@ main()
 {
     suart_init();
     // init_adc();
-    init_timer();
+    // init_timer();
 
     sei();
     sputs_p(banner_s);
