@@ -1,5 +1,5 @@
 
-#define XTAL	8e6
+#define XTAL	1000000   // 1Mhz, default RC oscillator config
 
 #define	BAUD	38400
 
