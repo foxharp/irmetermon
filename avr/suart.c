@@ -98,12 +98,22 @@ sputchar(u8 val)		// send byte
 }
 
 
+#if 1
 void
-sputs_p(const prog_char * txt)	// send string
+sputs_p(const prog_char *s)	// send string
 {
-    while (*txt)
-	sputchar(*txt++);
+    while (*s)
+	sputchar(*s++);
 }
+#else
+void
+sputs_p(const prog_char *s)
+{
+    char c;
+    while ( (c = pgm_read_byte(s++)) )
+	sputchar(c);
+}
+#endif
 
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)	// tx bit

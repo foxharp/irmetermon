@@ -10,7 +10,8 @@
 
 #define bit(x) _BV(x)
 
-static prog_char banner_s[] = IRMETERMON_VERSION "-irmetermon\n";
+static prog_char banner[] = IRMETERMON_VERSION "-irmetermon\n";
+static prog_char quickfox[] = "The Quick Brown Fox Jumps Over The Lazy Dog\n";
 
 #define MS 1000			// or whatever
 #define STEP_UP	     10
@@ -155,31 +156,41 @@ tracker(int new)
 int
 main()
 {
+    int i;
+
     suart_init();
-    // init_adc();
-    // init_timer();
+
+#if LATER
+    init_adc();
+    init_timer();
+#endif
 
     sei();
-    sputs_p(banner_s);
+#if LATER
+    sputs_p(banner);
+#endif
 
     for (;;) {
 	wdt_reset();
 	if (kbhit()) {
 	    switch (sgetchar()) {
+	    case 'v':
+		sputs_p(banner);
+		break;
 	    case 'x':
-		while (!kbhit())
-		    sputs_p("The Quick Brown Fox Jumps Over The Lazy Dog\n");
-		sgetchar();
+		for (i = 0; i < 20; i++)
+		    sputs_p(quickfox);
 		break;
 	    case 'U':
-		while (!kbhit())
+		for (i = 0; i < (80 * 20); i++)
 		    sputchar('U');
-		sgetchar();
+		sputchar('\n');
 		break;
 	    }
 	}
 
 #if LATER
+	// try and get some sleep
 	cli();
 	if (!stx_active()) {
 	    // only sleep if there's no pulse data to emit
