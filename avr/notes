@@ -1,0 +1,14 @@
+
+
+data rate:
+
+    want to send 8 char index + 8 char time + 2 delimiters == 18 chars
+	per pulse.
+
+    1kW is 2.5sec/pulse 20kW .125s/pulse, or 8 pulse/sec
+
+    8 pulse * 18 chars is 144 characters/sec
+
+    10 bits/char * 144 char/sec is 1440 bits/sec
+
+
