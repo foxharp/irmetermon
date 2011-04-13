@@ -112,8 +112,9 @@ found_pulse(time_t now)
     sputchar('\n');
 }
 
+#ifdef AVERAGING
 int
-moving_avg(int val)
+filter(int val)
 {
     static int avg;
 
@@ -121,6 +122,39 @@ moving_avg(int val)
 
     return avg / AVG_DEPTH;
 }
+#else // median filter
+
+// nifty value swapper
+#define swap(a,b) {(a)=(b)^(a); (b)=(a)^(b); (a)=(b)^(a);}
+
+static unsigned char ovals[3];
+
+int
+median(void)
+{
+    unsigned char a = ovals[0];
+    unsigned char b = ovals[1];
+    unsigned char c = ovals[2];
+
+    // sort the values
+    if (a > b) swap(a, b);
+    if (b > c) swap(b, c);
+    if (a > b) swap(a, b);
+
+    // return the middle value
+    return b;
+}
+
+int
+filter(int val)
+{
+    static unsigned char i;
+
+    ovals[i % 3] = val;
+    if (i++ < 3) return val;
+    return median();
+}
+#endif
 
 #define abs(a) (((a) >= 0) ? (a) : -(a))
 
@@ -142,7 +176,7 @@ tracker(int new)
 
     now = ms_timer();
 
-    new = moving_avg(new);
+    new = filter(new);
 
     if (new - old > STEP_UP) {
 	up = now;
@@ -160,10 +194,8 @@ main()
 
     suart_init();
 
-#if LATER
     init_adc();
     init_timer();
-#endif
 
     sei();
 #if LATER
