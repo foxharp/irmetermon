@@ -6,7 +6,6 @@
 #include <avr/wdt.h>
 
 #include "common.h"
-#include "suart.h"
 
 #define bit(x) _BV(x)
 
@@ -187,54 +186,31 @@ tracker(int new)
     }
 }
 
-int
-main()
+void
+irmeter_command(char c)
 {
     int i;
 
-    suart_init();
+    switch (c) {
+    case 'v':
+	sputs_p(banner);
+	break;
+    case 'x':
+	for (i = 0; i < 20; i++)
+	    sputs_p(quickfox);
+	break;
+    case 'U':
+	for (i = 0; i < (80 * 20); i++)
+	    sputchar('U');
+	sputchar('\n');
+	break;
+    }
+}
 
+void
+irmeter_hwinit(void)
+{
     init_adc();
     init_timer();
-
-    sei();
-#if LATER
-    sputs_p(banner);
-#endif
-
-    for (;;) {
-	wdt_reset();
-	if (kbhit()) {
-	    switch (sgetchar()) {
-	    case 'v':
-		sputs_p(banner);
-		break;
-	    case 'x':
-		for (i = 0; i < 20; i++)
-		    sputs_p(quickfox);
-		break;
-	    case 'U':
-		for (i = 0; i < (80 * 20); i++)
-		    sputchar('U');
-		sputchar('\n');
-		break;
-	    }
-	}
-
-#if LATER
-	// try and get some sleep
-	cli();
-	if (!stx_active()) {
-	    // only sleep if there's no pulse data to emit
-	    // (see <sleep.h> for explanation of this snippet)
-	    sleep_enable();
-	    sei();
-	    sleep_cpu();
-	    sleep_disable();
-	}
-	sei();
-	// fixme emit_pulse_data();
-#endif
-    }
-
 }
+
