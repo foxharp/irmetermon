@@ -67,4 +67,4 @@ extern USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface;
 extern USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface;
 
 void sputchar(char c);
-void sputs_p(const prog_char *s);
+void sputstring(char *s);

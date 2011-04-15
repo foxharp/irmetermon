@@ -9,8 +9,10 @@
 
 #define bit(x) _BV(x)
 
-static prog_char banner[] = IRMETERMON_VERSION "-irmetermon\n";
-static prog_char quickfox[] = "The Quick Brown Fox Jumps Over The Lazy Dog\n";
+// static prog_char banner[] = IRMETERMON_VERSION "-irmetermon\n";
+// static prog_char quickfox[] = "The Quick Brown Fox Jumps Over The Lazy Dog\n";
+static char *banner = IRMETERMON_VERSION "-irmetermon\r\n";
+static char *quickfox = "The Quick Brown Fox Jumps Over The Lazy Dog\r\n";
 
 #define MS 1000			// or whatever
 #define STEP_UP	     10
@@ -39,7 +41,11 @@ init_timer(void)
 
 }
 
+#ifdef TIM0_OVF_vect
 ISR(TIM0_OVF_vect)
+#else
+ISR(TIMER0_OVF_vect)
+#endif
 {
     static unsigned char prescale;
 
@@ -193,11 +199,11 @@ irmeter_command(char c)
 
     switch (c) {
     case 'v':
-	sputs_p(banner);
+	sputstring(banner);
 	break;
     case 'x':
 	for (i = 0; i < 20; i++)
-	    sputs_p(quickfox);
+	    sputstring(quickfox);
 	break;
     case 'U':
 	for (i = 0; i < (80 * 20); i++)
