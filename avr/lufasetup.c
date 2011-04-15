@@ -66,6 +66,7 @@ USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface =
  *  within a device can be differentiated from one another. This is for the second CDC interface,
  *  which echos back all received data from the host.
  */
+#if DUAL
 USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface =
 	{
 		.Config =
@@ -85,6 +86,7 @@ USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface =
 				.NotificationEndpointDoubleBank   = false,
 			},
 	};
+#endif
 
 
 /** Event handler for the library USB Connection event. */
@@ -105,7 +107,9 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 	bool ConfigSuccess = true;
 
 	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial1_CDC_Interface);
+#if DUAL
 	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial2_CDC_Interface);
+#endif
 
 	LEDs_SetAllLEDs(ConfigSuccess ? LEDMASK_USB_READY : LEDMASK_USB_ERROR);
 }
@@ -114,6 +118,8 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 void EVENT_USB_Device_ControlRequest(void)
 {
 	CDC_Device_ProcessControlRequest(&VirtualSerial1_CDC_Interface);
+#if DUAL
 	CDC_Device_ProcessControlRequest(&VirtualSerial2_CDC_Interface);
+#endif
 }
 
