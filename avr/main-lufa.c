@@ -1,4 +1,5 @@
 #include "main-lufa.h"
+#include "common.h"
 #include "irmeter.h"
 
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
@@ -15,7 +16,7 @@ void SetupHardware(void)
 	LEDs_Init();
 	USB_Init();
 
-	// irmeter_hwinit();
+	irmeter_hwinit();
 }
 
 void
@@ -45,15 +46,14 @@ sputs_p(const prog_char *s)	// send string
     while (*s)
 	sputchar(*s++);
 }
-#elif 0
+#endif
 void
-sputs_p(const prog_char *s)
+sputstring_p(const prog_char *s)
 {
     char c;
     while ( (c = pgm_read_byte(s++)) )
 	sputchar(c);
 }
-#endif
 
 void
 sputstring(char *s)
@@ -73,9 +73,6 @@ int main(void)
 	for (;;)
 	{
 
-		if (kbhit())
-		    irmeter_command(sgetchar());
-
 		CDC_Device_USBTask(&VirtualSerial1_CDC_Interface);
 
 #if DUAL
@@ -92,5 +89,6 @@ int main(void)
 		CDC_Device_USBTask(&VirtualSerial2_CDC_Interface);
 #endif
 		USB_USBTask();
+		monitor();
 	}
 }

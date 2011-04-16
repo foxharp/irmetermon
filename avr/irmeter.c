@@ -9,11 +9,6 @@
 
 #define bit(x) _BV(x)
 
-// static prog_char banner[] = IRMETERMON_VERSION "-irmetermon\n";
-// static prog_char quickfox[] = "The Quick Brown Fox Jumps Over The Lazy Dog\n";
-static char *banner = IRMETERMON_VERSION "-irmetermon\r\n";
-static char *quickfox = "The Quick Brown Fox Jumps Over The Lazy Dog\r\n";
-
 #define MS 1000			// or whatever
 #define STEP_UP	     10
 #define STEP_DOWN   -10
@@ -98,7 +93,14 @@ puthex(unsigned char i)
 }
 
 void
-puthex_l(long l)
+puthex16(unsigned int i)
+{
+    puthex((i >> 8) & 0xff);
+    puthex((i >> 0) & 0xff);
+}
+
+void
+puthex32(long l)
 {
     puthex((l >> 24) & 0xff);
     puthex((l >> 16) & 0xff);
@@ -111,9 +113,9 @@ void
 found_pulse(time_t now)
 {
     static unsigned long index;
-    puthex_l(index);
+    puthex32(index);
     sputchar(':');
-    puthex_l(now);
+    puthex32(now);
     sputchar('\n');
 }
 
@@ -193,30 +195,9 @@ tracker(int new)
 }
 
 void
-irmeter_command(char c)
-{
-    int i;
-
-    switch (c) {
-    case 'v':
-	sputstring(banner);
-	break;
-    case 'x':
-	for (i = 0; i < 20; i++)
-	    sputstring(quickfox);
-	break;
-    case 'U':
-	for (i = 0; i < (80 * 20); i++)
-	    sputchar('U');
-	sputchar('\n');
-	break;
-    }
-}
-
-void
 irmeter_hwinit(void)
 {
     init_adc();
-    init_timer();
+    // init_timer();
 }
 
