@@ -6,8 +6,8 @@
 #include <avr/wdt.h>
 
 #include "common.h"
+#include "timer.h"
 
-#define bit(x) _BV(x)
 
 #define MS 1000			// or whatever
 #define STEP_UP	     10
@@ -15,45 +15,16 @@
 #define PULSE_LEN	10 * MS
 #define AVG_DEPTH 4
 
-typedef unsigned long time_t;
 void tracker(int new);
-
-unsigned long milliseconds;
-#define ms_timer() (milliseconds)
+time_t led_flash;
 
 void
-init_timer(void)
+led_handle(void)
 {
-    // suart.c uses the 16 bit timer.  that could change, if XTAL is
-    // slow enough to allow bit rates to be timed in 8 bits.  but the
-    // overhead of the clock interrupt is very low, so we'll just use
-    // the set 8-bit timer0
-    // set up for simple overflow operation
-    TCCR0A = bit(WGM01);  // CTC
-    TCCR0B = bit(CS02) | bit(CS00);   // prescaler is 1024 
-    OCR0A = 244;	// see below
-    TIMSK0 = bit(OCIE0A);
-
+    if ((PORTE & bit(PE6)) && check_timer(led_flash, 100))
+	PORTE &= ~bit(PE6);
 }
 
-#ifdef TIM0_OVF_vect
-ISR(TIM0_OVF_vect)
-#else
-ISR(TIMER0_OVF_vect)
-#endif
-{
-    static unsigned char prescale;
-
-    // xtal == 1024    *   244   *   N
-    //       (prescale)  (overflow)
-    // "244" is chosen so N is close to integral for 1Mhz, 8Mhz, 12Mhz, etc.
-#define N  (XTAL / (1024UL * 244UL))
-
-    if ((prescale++ % N) == 0)
-	milliseconds++;
-
-    TIFR0 = bit(OCF0A);
-}
 
 void
 init_adc(void)
@@ -68,11 +39,29 @@ init_adc(void)
     ADCSRA |= bit(ADSC);  // start first conversion 
 }
 
+unsigned int adc_counter;
+int filtered;
+
 ISR(ADC_vect)
 {
+    adc_counter++;
     tracker(ADCH);
     ADCSRA |= bit(ADSC);  // next conversion
-} 
+}
+
+void
+show_adc(void)
+{
+#if 0
+    sputstring("adc_counter: ");
+    puthex16(adc_counter);
+    sputchar('\n');
+#endif
+
+    sputstring("filtered: ");
+    puthex16(filtered);
+    sputchar('\n');
+}
 
 void
 puthex(unsigned char i)
@@ -119,6 +108,7 @@ found_pulse(time_t now)
     sputchar('\n');
 }
 
+#define AVERAGING 1
 #ifdef AVERAGING
 int
 filter(int val)
@@ -134,14 +124,14 @@ filter(int val)
 // nifty value swapper
 #define swap(a,b) {(a)=(b)^(a); (b)=(a)^(b); (a)=(b)^(a);}
 
-static unsigned char ovals[3];
+static unsigned char o_vals[3];
 
 int
 median(void)
 {
-    unsigned char a = ovals[0];
-    unsigned char b = ovals[1];
-    unsigned char c = ovals[2];
+    unsigned char a = o_vals[0];
+    unsigned char b = o_vals[1];
+    unsigned char c = o_vals[2];
 
     // sort the values
     if (a > b) swap(a, b);
@@ -157,7 +147,7 @@ filter(int val)
 {
     static unsigned char i;
 
-    ovals[i % 3] = val;
+    o_vals[i % 3] = val;
     if (i++ < 3) return val;
     return median();
 }
@@ -183,21 +173,23 @@ tracker(int new)
 
     now = ms_timer();
 
-    new = filter(new);
+    filtered = filter(new);
 
-    if (new - old > STEP_UP) {
+    if (filtered - old > STEP_UP) {
 	up = now;
-    } else if (up && about_time(up, now) && (new - old) < STEP_DOWN) {
+    } else if (up && about_time(up, now) && (filtered - old) < STEP_DOWN) {
 	up = 0;
 	if (now > 100) // don't report until adc and averages have settled.
 	    found_pulse(now);
     }
+    old = filtered;
 }
 
 void
 irmeter_hwinit(void)
 {
     init_adc();
-    // init_timer();
+    init_timer();
+    DDRE |= bit(PE6);
 }
 

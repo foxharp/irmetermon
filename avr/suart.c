@@ -31,6 +31,10 @@ u8 srx_tmp;
 void
 suart_init(void)
 {
+    // suart.c uses the 16 bit timer.  that could change, if XTAL is
+    // slow enough to allow bit rates to be timed in 8 bits.  but the
+    // overhead of the clock interrupt is very low, so we'll just use
+    // the set 8-bit timer0
     OCR1A = TCNT1 + 1;		// force first compare
     TCCR1A = bit(COM1A1) | bit(COM1A0);	// set OC1A high, T1 mode 0
     STIMSK = bit(OCIE1A);	// enable tx

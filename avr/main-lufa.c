@@ -1,4 +1,5 @@
 #include "main-lufa.h"
+#include "timer.h"
 #include "common.h"
 #include "irmeter.h"
 
@@ -13,7 +14,7 @@ void SetupHardware(void)
 	clock_prescale_set(clock_div_1);
 
 	/* Hardware Initialization */
-	LEDs_Init();
+	// LEDs_Init();
 	USB_Init();
 
 	irmeter_hwinit();
@@ -67,7 +68,7 @@ int main(void)
 {
 	SetupHardware();
 
-	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
+	// LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	sei();
 
 	for (;;)
@@ -90,5 +91,6 @@ int main(void)
 #endif
 		USB_USBTask();
 		monitor();
+		led_handle();
 	}
 }

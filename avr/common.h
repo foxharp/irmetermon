@@ -1,8 +1,9 @@
 
-#define XTAL	1000000   // 1Mhz, default RC oscillator config
+#define XTAL	16000000   // 1Mhz, default RC oscillator config
 
 #define	BAUD	38400
 
+#define bit(x) _BV(x)
 
 typedef unsigned char  u8;
 typedef   signed char  s8;

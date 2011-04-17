@@ -26,7 +26,9 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
+#include "timer.h"
 #include "common.h"
+#include "irmeter.h"
 
 #define ctrl(c) (c ^ 0x40)
 #define DEL 0x7f
@@ -132,6 +134,16 @@ void monitor(void)
 	unsigned int i;
 	unsigned char cmd, m;
 
+	static char adc_show;
+	static time_t adc_show_time;
+
+	if (adc_show) {
+	    if (check_timer(adc_show_time, 100)) {
+		show_adc();
+		adc_show_time = get_ms_timer();
+	    }
+	}
+
 	if (!getline()) return;
 
 	l = 0;
@@ -139,6 +151,11 @@ void monitor(void)
 	switch (cmd)
 	{
 		case '\0':
+			break;
+
+		case 'a':
+			adc_show = gethex();
+			adc_show_time = get_ms_timer();
 			break;
 
 		case 'D':
@@ -160,34 +177,16 @@ void monitor(void)
 		    break;
 		case 'b':
 		    cli();
+		    MCUSR |= (1 << WDRF);
 		    wdt_enable(WDTO_250MS);
 		    while(1); //loop 
 		    break;
 		case 'j':
 		    cli();
-		    vp = *(voidfunc *)0x1f000;
+		    vp = *(voidfunc *)0xf000;
 		    (*vp)();
 		    break;
 
-#if 0
-		case 'W':  /* force a watchdog reset */
-			switch (n = gethex())
-			{
-			case 0:  // no arg given -- force a reboot
-				watchdog_reboot();
-
-			// otherwise, exercise watchdog_start()/stop() (which only
-			// work in stop mode.)
-			case 1:  // debug support
-				watchdog_stop();
-				break;
-
-			default:
-				watchdog_start(n);
-
-			}
-			break;
-#endif
 
 		case 'w':
 			addr = gethex();

@@ -45,6 +45,7 @@ include $(LUFA_PATH)/LUFA/makefile
 SRC = main-lufa.c						    \
 	  irmeter.c                                               \
 	  monitor.c                                               \
+	  timer.c                                               \
 	  lufasetup.c                                               \
 	  descriptors.c                                               \
 	  $(LUFA_SRC_USB)                                             \
