@@ -9,11 +9,11 @@
 #include "timer.h"
 
 
-#define MS 1000					// or whatever
-#define STEP_UP	     10
-#define STEP_DOWN   -10
+#define MS			1000		// or whatever
+#define STEP_UP		10
+#define STEP_DOWN	-10
 #define PULSE_LEN	10 * MS
-#define AVG_DEPTH 4
+#define AVG_DEPTH	4
 
 void tracker(int new);
 

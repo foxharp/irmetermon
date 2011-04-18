@@ -1,3 +1,6 @@
+/* this file included in GPL'ed irmetermon by written permission of the
+ * author.
+ */
 /************************************************************************/
 /*                                                                      */
 /*                      Software UART using T1                          */
