@@ -48,16 +48,19 @@ include $(LUFA_PATH)/LUFA/makefile
 
 # List C source files here. (C dependencies are automatically generated.)
 OURSRC = main-lufa.c						    \
+	  luart.c                                               \
 	  irmeter.c                                               \
 	  monitor.c                                               \
 	  timer.c
 
 OURHDRS = common.h						\
+	  luart.h						\
 	  irmeter.h						\
+	  descriptors.h						\
 	  timer.h
 
-#	  descriptors.h						\
-
+# i'm segregating descriptors.ch purely because it confuses indent,
+# which i'm using to keep the code formatted.   -pgf
 SRC = $(OURSRC)							\
 	  descriptors.c 					\
 	  $(LUFA_SRC_USB)                                             \

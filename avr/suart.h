@@ -51,14 +51,14 @@
 #endif
 
 #ifndef NO_RECEIVE
-extern volatile u8 srx_done;
+extern volatile unsigned char srx_done;
 #define kbhit()	(srx_done)		// true if byte received
-u8 sgetchar(void);
+unsigned char sgetchar(void);
 #endif
 
-extern volatile u8 stx_count;
+extern volatile unsigned char stx_count;
 #define stx_active() (stx_count)
 
 void suart_init(void);
-// void sputchar( u8 val );
+// void sputchar( unsigned char val );
 // void sputs_p( const prog_char *txt );

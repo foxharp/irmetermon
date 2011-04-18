@@ -161,10 +161,14 @@ void monitor(void)
 		break;
 
 	case 'e':
-		force_reboot();			// happens later
+		// restarts the current image
+		wdt_enable(WDTO_250MS);
+		for (;;);
 		break;
 
-	case 'b':					// for reset -- PB1 jumpered to RST
+	case 'b':
+		// yanks the h/w reset line (jumpered to PB1), which
+		// takes us to the bootloader.
 		DDRB = bit(PB1);
 		PORTB &= ~bit(PB1);
 		for (;;);
@@ -245,7 +249,8 @@ void monitor(void)
 		break;
 
 	case 'e':
-		force_reboot();			// happens later
+		wdt_enable(WDTO_250MS);
+		for (;;);
 		break;
 
 	case 'b':					// for reset -- PB1 jumpered to RST

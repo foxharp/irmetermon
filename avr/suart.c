@@ -21,17 +21,17 @@
 
 #define bit(x) _BV(x)
 
-#define BIT_TIME	(u16)((XTAL + BAUD/2) / BAUD)
+#define BIT_TIME	(unsigned int)((XTAL + BAUD/2) / BAUD)
 
 
-volatile u8 stx_count;
-u8 stx_data;
+volatile unsigned char stx_count;
+unsigned char stx_data;
 
 #ifndef NO_RECEIVE
-volatile u8 srx_done;
-u8 srx_data;
-u8 srx_mask;
-u8 srx_tmp;
+volatile unsigned char srx_done;
+unsigned char srx_data;
+unsigned char srx_mask;
+unsigned char srx_tmp;
 #endif
 
 
@@ -58,7 +58,7 @@ void suart_init(void)
 
 
 #ifndef NO_RECEIVE
-u8 sgetchar(void)				// get byte
+unsigned char sgetchar(void)	// get byte
 {
 	while (!srx_done);			// wait until byte received
 	srx_done = 0;
@@ -68,7 +68,7 @@ u8 sgetchar(void)				// get byte
 
 SIGNAL(SIG_INPUT_CAPTURE1)		// rx start
 {
-	OCR1B = ICR1 + (u16) (BIT_TIME * 1.5);	// scan 1.5 bits after start
+	OCR1B = ICR1 + (unsigned int) (BIT_TIME * 1.5);	// scan 1.5 bits after start
 	srx_tmp = 0;				// clear bit storage
 	srx_mask = 1;				// bit mask
 	STIFR = bit(OCF1B);			// clear pending interrupt
@@ -79,7 +79,7 @@ SIGNAL(SIG_INPUT_CAPTURE1)		// rx start
 
 SIGNAL(SIG_OUTPUT_COMPARE1B)
 {
-	u8 in = SRXPIN;				// scan rx line
+	unsigned char in = SRXPIN;	// scan rx line
 
 	if (srx_mask) {
 		if (in & bit(SRX))
@@ -122,8 +122,8 @@ void sputstring_p(const prog_char * s)
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)	// tx bit
 {
-	u8 dout;
-	u8 count;
+	unsigned char dout;
+	unsigned char count;
 
 	OCR1A += BIT_TIME;			// next bit slice
 	count = stx_count;

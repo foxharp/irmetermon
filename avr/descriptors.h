@@ -37,67 +37,68 @@
 #define _DESCRIPTORS_H_
 
 	/* Includes: */
-		#include <avr/pgmspace.h>
+#include <avr/pgmspace.h>
 
-		#include <LUFA/Drivers/USB/USB.h>
+#include <LUFA/Drivers/USB/USB.h>
 
 	/* Macros: */
 		/** Endpoint number of the first CDC interface's device-to-host notification IN endpoint. */
-		#define CDC1_NOTIFICATION_EPNUM        3
+#define CDC1_NOTIFICATION_EPNUM        3
 
 		/** Endpoint number of the first CDC interface's device-to-host data IN endpoint. */
-		#define CDC1_TX_EPNUM                  1
+#define CDC1_TX_EPNUM                  1
 
 		/** Endpoint number of the first CDC interface's host-to-device data OUT endpoint. */
-		#define CDC1_RX_EPNUM                  2
+#define CDC1_RX_EPNUM                  2
 
+#if DUAL
 		/** Endpoint number of the second CDC interface's device-to-host notification IN endpoint. */
-		#define CDC2_NOTIFICATION_EPNUM        4
+#define CDC2_NOTIFICATION_EPNUM        4
 
 		/** Endpoint number of the second CDC interface's device-to-host data IN endpoint. */
-		#define CDC2_TX_EPNUM                  5
+#define CDC2_TX_EPNUM                  5
 
 		/** Endpoint number of the second CDC interface's host-to-device data OUT endpoint. */
-		#define CDC2_RX_EPNUM                  6
+#define CDC2_RX_EPNUM                  6
+#endif
 
 		/** Size in bytes of the CDC device-to-host notification IN endpoints. */
-		#define CDC_NOTIFICATION_EPSIZE        8
+#define CDC_NOTIFICATION_EPSIZE        8
 
 		/** Size in bytes of the CDC data IN and OUT endpoints. */
-		#define CDC_TXRX_EPSIZE                16
+#define CDC_TXRX_EPSIZE                16
 
 	/* Type Defines: */
 		/** Type define for the device configuration descriptor structure. This must be defined in the
 		 *  application code, as the configuration descriptor contains several sub-descriptors which
 		 *  vary between devices, and which describe the device's usage to the host.
 		 */
-		typedef struct
-		{
-			USB_Descriptor_Configuration_Header_t    Config;
-			USB_Descriptor_Interface_Association_t   CDC1_IAD;
-			USB_Descriptor_Interface_t               CDC1_CCI_Interface;
-			USB_CDC_Descriptor_FunctionalHeader_t    CDC1_Functional_Header;
-			USB_CDC_Descriptor_FunctionalACM_t       CDC1_Functional_ACM;
-			USB_CDC_Descriptor_FunctionalUnion_t     CDC1_Functional_Union;
-			USB_Descriptor_Endpoint_t                CDC1_ManagementEndpoint;
-			USB_Descriptor_Interface_t               CDC1_DCI_Interface;
-			USB_Descriptor_Endpoint_t                CDC1_DataOutEndpoint;
-			USB_Descriptor_Endpoint_t                CDC1_DataInEndpoint;
-			USB_Descriptor_Interface_Association_t   CDC2_IAD;
-			USB_Descriptor_Interface_t               CDC2_CCI_Interface;
-			USB_CDC_Descriptor_FunctionalHeader_t    CDC2_Functional_Header;
-			USB_CDC_Descriptor_FunctionalACM_t       CDC2_Functional_ACM;
-			USB_CDC_Descriptor_FunctionalUnion_t     CDC2_Functional_Union;
-			USB_Descriptor_Endpoint_t                CDC2_ManagementEndpoint;
-			USB_Descriptor_Interface_t               CDC2_DCI_Interface;
-			USB_Descriptor_Endpoint_t                CDC2_DataOutEndpoint;
-			USB_Descriptor_Endpoint_t                CDC2_DataInEndpoint;
-		} USB_Descriptor_Configuration_t;
+typedef struct {
+	USB_Descriptor_Configuration_Header_t Config;
+	USB_Descriptor_Interface_Association_t CDC1_IAD;
+	USB_Descriptor_Interface_t CDC1_CCI_Interface;
+	USB_CDC_Descriptor_FunctionalHeader_t CDC1_Functional_Header;
+	USB_CDC_Descriptor_FunctionalACM_t CDC1_Functional_ACM;
+	USB_CDC_Descriptor_FunctionalUnion_t CDC1_Functional_Union;
+	USB_Descriptor_Endpoint_t CDC1_ManagementEndpoint;
+	USB_Descriptor_Interface_t CDC1_DCI_Interface;
+	USB_Descriptor_Endpoint_t CDC1_DataOutEndpoint;
+	USB_Descriptor_Endpoint_t CDC1_DataInEndpoint;
+	USB_Descriptor_Interface_Association_t CDC2_IAD;
+	USB_Descriptor_Interface_t CDC2_CCI_Interface;
+	USB_CDC_Descriptor_FunctionalHeader_t CDC2_Functional_Header;
+	USB_CDC_Descriptor_FunctionalACM_t CDC2_Functional_ACM;
+	USB_CDC_Descriptor_FunctionalUnion_t CDC2_Functional_Union;
+	USB_Descriptor_Endpoint_t CDC2_ManagementEndpoint;
+	USB_Descriptor_Interface_t CDC2_DCI_Interface;
+	USB_Descriptor_Endpoint_t CDC2_DataOutEndpoint;
+	USB_Descriptor_Endpoint_t CDC2_DataInEndpoint;
+} USB_Descriptor_Configuration_t;
 
 	/* Function Prototypes: */
-		uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
-		                                    const uint8_t wIndex,
-		                                    const void** const DescriptorAddress)
-		                                    ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
+uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
+									const uint8_t wIndex,
+									const void **const DescriptorAddress)
+ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
 
 #endif
