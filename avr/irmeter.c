@@ -29,7 +29,7 @@ void
 led_flash(void)
 {
 	PORTE |= bit(PE6);
-	led_time = milliseconds;
+	led_time = get_ms_timer();
 }
 
 void
@@ -185,7 +185,7 @@ tracker(int new)
     time_t now;
     int delta;
 
-    now = ms_timer();
+    now = get_ms_timer();
 
     filtered = filter(new);
 

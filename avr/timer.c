@@ -47,9 +47,15 @@ time_t
 get_ms_timer(void)
 {
     time_t ms;
+    char sreg;
+
+    sreg = SREG;
     cli();
+
     ms = milliseconds;
-    sei();
+
+    SREG = sreg;
+
     return ms;
 }
 
