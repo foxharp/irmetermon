@@ -10,44 +10,42 @@
 #include "suart.h"
 
 
-void
-kill_time(void)
+void kill_time(void)
 {
 #if LATER
 	// try and get some sleep
 	cli();
 	if (!stx_active()) {
-	    // only sleep if there's no pulse data to emit
-	    // (see <sleep.h> for explanation of this snippet)
-	    sleep_enable();
-	    sei();
-	    sleep_cpu();
-	    sleep_disable();
+		// only sleep if there's no pulse data to emit
+		// (see <sleep.h> for explanation of this snippet)
+		sleep_enable();
+		sei();
+		sleep_cpu();
+		sleep_disable();
 	}
 	sei();
 	// fixme emit_pulse_data();
 #endif
 }
 
-int
-main()
+int main()
 {
 
-    suart_init();
+	suart_init();
 
-    irmeter_hwinit();
+	irmeter_hwinit();
 
-    sei();
+	sei();
 #if LATER
-    sputs_p(banner);
+	sputs_p(banner);
 #endif
 
-    for (;;) {
-	wdt_reset();
+	for (;;) {
+		wdt_reset();
 
-	monitor();
+		monitor();
 
-	kill_time();
-    }
+		kill_time();
+	}
 
 }

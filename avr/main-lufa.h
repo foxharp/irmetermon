@@ -51,4 +51,3 @@ void EVENT_USB_Device_ControlRequest(void);
 
 extern USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface;
 extern USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface;
-

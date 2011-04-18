@@ -41,25 +41,24 @@
  *  within a device can be differentiated from one another. This is for the first CDC interface,
  *  which sends strings to the host for each joystick movement.
  */
-USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface =
-	{
-		.Config =
-			{
-				.ControlInterfaceNumber           = 0,
+USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface = {
+	.Config = {
+			   .ControlInterfaceNumber = 0,
 
-				.DataINEndpointNumber             = CDC1_TX_EPNUM,
-				.DataINEndpointSize               = CDC_TXRX_EPSIZE,
-				.DataINEndpointDoubleBank         = false,
+			   .DataINEndpointNumber = CDC1_TX_EPNUM,
+			   .DataINEndpointSize = CDC_TXRX_EPSIZE,
+			   .DataINEndpointDoubleBank = false,
 
-				.DataOUTEndpointNumber            = CDC1_RX_EPNUM,
-				.DataOUTEndpointSize              = CDC_TXRX_EPSIZE,
-				.DataOUTEndpointDoubleBank        = false,
+			   .DataOUTEndpointNumber = CDC1_RX_EPNUM,
+			   .DataOUTEndpointSize = CDC_TXRX_EPSIZE,
+			   .DataOUTEndpointDoubleBank = false,
 
-				.NotificationEndpointNumber       = CDC1_NOTIFICATION_EPNUM,
-				.NotificationEndpointSize         = CDC_NOTIFICATION_EPSIZE,
-				.NotificationEndpointDoubleBank   = false,
-			},
-	};
+			   .NotificationEndpointNumber = CDC1_NOTIFICATION_EPNUM,
+			   .NotificationEndpointSize = CDC_NOTIFICATION_EPSIZE,
+			   .NotificationEndpointDoubleBank = false,
+			   }
+	,
+};
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
  *  passed to all CDC Class driver functions, so that multiple instances of the same class
@@ -67,25 +66,24 @@ USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface =
  *  which echos back all received data from the host.
  */
 #if DUAL
-USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface =
-	{
-		.Config =
-			{
-				.ControlInterfaceNumber           = 2,
+USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface = {
+	.Config = {
+			   .ControlInterfaceNumber = 2,
 
-				.DataINEndpointNumber             = CDC2_TX_EPNUM,
-				.DataINEndpointSize               = CDC_TXRX_EPSIZE,
-				.DataINEndpointDoubleBank         = false,
+			   .DataINEndpointNumber = CDC2_TX_EPNUM,
+			   .DataINEndpointSize = CDC_TXRX_EPSIZE,
+			   .DataINEndpointDoubleBank = false,
 
-				.DataOUTEndpointNumber            = CDC2_RX_EPNUM,
-				.DataOUTEndpointSize              = CDC_TXRX_EPSIZE,
-				.DataOUTEndpointDoubleBank        = false,
+			   .DataOUTEndpointNumber = CDC2_RX_EPNUM,
+			   .DataOUTEndpointSize = CDC_TXRX_EPSIZE,
+			   .DataOUTEndpointDoubleBank = false,
 
-				.NotificationEndpointNumber       = CDC2_NOTIFICATION_EPNUM,
-				.NotificationEndpointSize         = CDC_NOTIFICATION_EPSIZE,
-				.NotificationEndpointDoubleBank   = false,
-			},
-	};
+			   .NotificationEndpointNumber = CDC2_NOTIFICATION_EPNUM,
+			   .NotificationEndpointSize = CDC_NOTIFICATION_EPSIZE,
+			   .NotificationEndpointDoubleBank = false,
+			   }
+	,
+};
 #endif
 
 
@@ -108,9 +106,11 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 {
 	bool ConfigSuccess = true;
 
-	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial1_CDC_Interface);
+	ConfigSuccess &=
+		CDC_Device_ConfigureEndpoints(&VirtualSerial1_CDC_Interface);
 #if DUAL
-	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial2_CDC_Interface);
+	ConfigSuccess &=
+		CDC_Device_ConfigureEndpoints(&VirtualSerial2_CDC_Interface);
 #endif
 
 	// LEDs_SetAllLEDs(ConfigSuccess ? LEDMASK_USB_READY : LEDMASK_USB_ERROR);
@@ -124,4 +124,3 @@ void EVENT_USB_Device_ControlRequest(void)
 	CDC_Device_ProcessControlRequest(&VirtualSerial2_CDC_Interface);
 #endif
 }
-

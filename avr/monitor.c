@@ -38,12 +38,13 @@
 #define DEL 0x7f
 #define tohex(c) (((c) >= 'a') ? ((c) - 'a' + 10) : ((c) - '0'))
 
-typedef void (*voidfunc)(void);
+typedef void (*voidfunc) (void);
 voidfunc vp;
 
 
 static char banner[] PROGMEM = IRMETERMON_VERSION "-irmetermon\r\n";
-static char quickfox[] PROGMEM = "The Quick Brown Fox Jumps Over The Lazy Dog\r\n";
+static char quickfox[] PROGMEM =
+	"The Quick Brown Fox Jumps Over The Lazy Dog\r\n";
 
 #if defined(MONITOR)
 
@@ -57,7 +58,8 @@ static char getline(void)
 {
 	char c;
 
-	if (!kbhit()) return 0;
+	if (!kbhit())
+		return 0;
 
 	c = sgetchar();
 
@@ -66,16 +68,14 @@ static char getline(void)
 		return 0;
 
 	// special for the +/-/= memory dump commands
-	if (l == 0 && (c == '+' || c == '-' || c == '='))
-	{
+	if (l == 0 && (c == '+' || c == '-' || c == '=')) {
 		line[l++] = c;
 		line[l] = '\0';
-		sputchar('\r'); // retreat over the prompt
+		sputchar('\r');			// retreat over the prompt
 		return 1;
 	}
 
-	if (c == '\r' || c == '\n')
-	{
+	if (c == '\r' || c == '\n') {
 		// done
 		sputchar('\n');
 		sputchar('\r');
@@ -85,26 +85,22 @@ static char getline(void)
 	sputchar(c);
 
 	// backspace
-	if (c == '\b' || c == DEL)
-	{
+	if (c == '\b' || c == DEL) {
 		sputchar(' ');
 		sputchar('\b');
-		if (l > 0) l--;
+		if (l > 0)
+			l--;
 		line[l] = '\0';
 		return 0;
 	}
-
 	// accumulate the character
-	if (l < (sizeof(line) - 2))
-	{
+	if (l < (sizeof(line) - 2)) {
 		line[l++] = c;
 		line[l] = '\0';
 		return 0;
 	}
-
 	// line too long
-	if (isprint(c))
-	{
+	if (isprint(c)) {
 		sputchar('\b');
 		sputchar(' ');
 		sputchar('\b');
@@ -115,12 +111,10 @@ static char getline(void)
 static int gethex(void)
 {
 	int n = 0;
-	while (isspace(line[l]))
-	{
+	while (isspace(line[l])) {
 		l++;
 	}
-	while (isxdigit(line[l]))
-	{
+	while (isxdigit(line[l])) {
 		n = (n << 4) | tohex(line[l]);
 		l++;
 	}
@@ -144,94 +138,94 @@ void monitor(void)
 	static time_t adc_show_time;
 
 	if (adc_show) {
-	    if (check_timer(adc_show_time, 100)) {
-		show_adc();
-		adc_show_time = get_ms_timer();
-	    }
+		if (check_timer(adc_show_time, 100)) {
+			show_adc();
+			adc_show_time = get_ms_timer();
+		}
 	}
 
-	if (!getline()) return;
+	if (!getline())
+		return;
 
 	l = 0;
 	cmd = line[l++];
-	switch (cmd)
-	{
-		case '\0':
-			break;
+	switch (cmd) {
+	case '\0':
+		break;
 
-		case 'a':
-			adc_show = gethex();
-			adc_show_time = get_ms_timer();
-			break;
+	case 'a':
+		adc_show = gethex();
+		adc_show_time = get_ms_timer();
+		break;
 
-		case 'D':
-			// irmeter_set_debug(gethex());
-			break;
+	case 'D':
+		// irmeter_set_debug(gethex());
+		break;
 
-		case 'v':
-			sputstring_p(banner);
-			break;
+	case 'v':
+		sputstring_p(banner);
+		break;
 
-		case 'q':
-		    for (i = 0; i < 20; i++)
+	case 'q':
+		for (i = 0; i < 20; i++)
 			sputstring_p(quickfox);
-		    break;
-		case 'U':
-		    for (i = 0; i < (80 * 20); i++)
+		break;
+	case 'U':
+		for (i = 0; i < (80 * 20); i++)
 			sputchar('U');
-		    sputchar('\n');
-		    break;
-		case 'b':
-		    cli();
-		    MCUSR |= (1 << WDRF);
-		    wdt_enable(WDTO_250MS);
-		    while(1); //loop 
-		    break;
-		case 'j':
-		    cli();
-		    vp = *(voidfunc *)0xf000;
-		    (*vp)();
-		    break;
+		sputchar('\n');
+		break;
+	case 'b':
+		cli();
+		MCUSR |= (1 << WDRF);
+		wdt_enable(WDTO_250MS);
+		while (1);				//loop 
+		break;
+	case 'j':
+		cli();
+		vp = *(voidfunc *) 0xf000;
+		(*vp) ();
+		break;
 
 
-		case 'w':
-			addr = gethex();
-			m = gethex();
-			*(unsigned char *)addr = m;
-			break;
+	case 'w':
+		addr = gethex();
+		m = gethex();
+		*(unsigned char *) addr = m;
+		break;
 
-		case 'x':  //  read 1 byte from xdata
-		case 'd':  //  read 1 byte from data
-			addr = gethex();
-			addr_is_data = (cmd == 'd');
-			// fallthrough
+	case 'x':					//  read 1 byte from xdata
+	case 'd':					//  read 1 byte from data
+		addr = gethex();
+		addr_is_data = (cmd == 'd');
+		// fallthrough
 
-		case '=':
-		case '+':
-		case '-':
-			if (cmd == '+')
-				addr++;
-			else if (cmd == '-')
-				addr--;
+	case '=':
+	case '+':
+	case '-':
+		if (cmd == '+')
+			addr++;
+		else if (cmd == '-')
+			addr--;
 
 #if 0
-			printf("%04x: %02x\n", (uint)addr,
-				   addr_is_data ?
-				   (uint)*(unsigned char *)addr :
-				   (uint)*(unsigned char xdata *)addr);
+		printf("%04x: %02x\n", (uint) addr,
+			   addr_is_data ?
+			   (uint) * (unsigned char *) addr :
+			   (uint) * (unsigned char xdata *) addr);
 #else
-			puthex16(addr);
-			sputstring(": ");
-		        if (addr_is_data)
-			    puthex(*(unsigned char *)addr);
-			else
-			    puthex(pgm_read_byte(addr));
-			sputchar('\n');
+		puthex16(addr);
+		sputstring(": ");
+		if (addr_is_data)
+			puthex(*(unsigned char *) addr);
+		else
+			puthex(pgm_read_byte(addr));
+		sputchar('\n');
 #endif
-			break;
+		break;
 
-		default:
-			sputstring("?");
+	default:
+		sputstring("?");
 	}
 
 	prompt();
@@ -241,41 +235,41 @@ void monitor(void)
 #elif defined(MINIMAL_MONITOR)
 // smaller version, might be useful
 
-void
-monitor(void)
+void monitor(void)
 {
-    int i;
-    char c;
+	int i;
+	char c;
 
-    if (!kbhit()) return;
+	if (!kbhit())
+		return;
 
-    c = sgetchar();
+	c = sgetchar();
 
 
-    switch (c) {
-    case 'v':
-	sputstring(banner);
-	break;
-    case 'x':
-	for (i = 0; i < 20; i++)
-	    sputstring(quickfox);
-	break;
-    case 'U':
-	for (i = 0; i < (80 * 20); i++)
-	    sputchar('U');
-	sputchar('\n');
-	break;
-    case 'b':
-	cli();
-	wdt_enable(WDTO_250MS);
-	while(1); //loop 
-	break;
-    case 'j':
-	cli();
-	vp = *(voidfunc *)0x1f000;
-	(*vp)();
-	break;
-    }
+	switch (c) {
+	case 'v':
+		sputstring(banner);
+		break;
+	case 'x':
+		for (i = 0; i < 20; i++)
+			sputstring(quickfox);
+		break;
+	case 'U':
+		for (i = 0; i < (80 * 20); i++)
+			sputchar('U');
+		sputchar('\n');
+		break;
+	case 'b':
+		cli();
+		wdt_enable(WDTO_250MS);
+		while (1);				//loop 
+		break;
+	case 'j':
+		cli();
+		vp = *(voidfunc *) 0x1f000;
+		(*vp) ();
+		break;
+	}
 }
 
 #endif
