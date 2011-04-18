@@ -1,0 +1,2 @@
+source "$HOME/.vilerc"
+set c-tabstop 4
