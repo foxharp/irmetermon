@@ -38,9 +38,6 @@
 #define DEL 0x7f
 #define tohex(c) (((c) >= 'a') ? ((c) - 'a' + 10) : ((c) - '0'))
 
-typedef void (*voidfunc) (void);
-voidfunc vp;
-
 
 static char banner[] PROGMEM = IRMETERMON_VERSION "-irmetermon\r\n";
 static char quickfox[] PROGMEM =
@@ -170,23 +167,22 @@ void monitor(void)
 		for (i = 0; i < 20; i++)
 			sputstring_p(quickfox);
 		break;
+
 	case 'U':
 		for (i = 0; i < (80 * 20); i++)
 			sputchar('U');
 		sputchar('\n');
 		break;
-	case 'b':
-		cli();
-		MCUSR |= (1 << WDRF);
-		wdt_enable(WDTO_250MS);
-		while (1);				//loop 
-		break;
-	case 'j':
-		cli();
-		vp = *(voidfunc *) 0xf000;
-		(*vp) ();
+
+	case 'e':
+		force_reboot();			// happens later
 		break;
 
+	case 'b':					// for reset -- PB1 jumpered to RST
+		DDRB = bit(PB1);
+		PORTB &= ~bit(PB1);
+		for (;;);
+		break;
 
 	case 'w':
 		addr = gethex();
@@ -250,25 +246,28 @@ void monitor(void)
 	case 'v':
 		sputstring(banner);
 		break;
+
 	case 'x':
 		for (i = 0; i < 20; i++)
 			sputstring(quickfox);
 		break;
+
 	case 'U':
 		for (i = 0; i < (80 * 20); i++)
 			sputchar('U');
 		sputchar('\n');
 		break;
-	case 'b':
-		cli();
-		wdt_enable(WDTO_250MS);
-		while (1);				//loop 
+
+	case 'e':
+		force_reboot();			// happens later
 		break;
-	case 'j':
-		cli();
-		vp = *(voidfunc *) 0x1f000;
-		(*vp) ();
+
+	case 'b':					// for reset -- PB1 jumpered to RST
+		DDRB = bit(PB1);
+		PORTB &= ~bit(PB1);
+		for (;;);
 		break;
+
 	}
 }
 

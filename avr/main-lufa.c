@@ -3,6 +3,12 @@
 #include "common.h"
 #include "irmeter.h"
 
+char reboot;
+
+void force_reboot(void)
+{
+	reboot = 1;
+}
 
 // simple character i/o based on LUFA calls 
 static int16_t hit_c;
@@ -60,7 +66,7 @@ int main(void)
 
 	sei();
 
-	for (;;) {
+	while (!reboot) {
 
 		CDC_Device_USBTask(&VirtualSerial1_CDC_Interface);
 
@@ -81,7 +87,18 @@ int main(void)
 		CDC_Device_USBTask(&VirtualSerial2_CDC_Interface);
 #endif
 		USB_USBTask();
+
 		monitor();
 		led_handle();
 	}
+
+	// this doesn't seem to work like i think it should.
+	// linux doesn't see that the current device is gone
+	// before the next instantiation appears.
+	wdt_enable(WDTO_4S);
+	USB_Detach();
+	USB_USBTask();
+	USB_ShutDown();
+	for (;;);
+
 }
