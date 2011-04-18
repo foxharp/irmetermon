@@ -25,6 +25,10 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <avr/io.h>
+#include <avr/wdt.h>
+#include <avr/power.h>
+#include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include "timer.h"
 #include "common.h"
@@ -34,25 +38,26 @@
 #define DEL 0x7f
 #define tohex(c) (((c) >= 'a') ? ((c) - 'a' + 10) : ((c) - '0'))
 
+typedef void (*voidfunc)(void);
+voidfunc vp;
+
+
+static char banner[] PROGMEM = IRMETERMON_VERSION "-irmetermon\r\n";
+static char quickfox[] PROGMEM = "The Quick Brown Fox Jumps Over The Lazy Dog\r\n";
+
+#if defined(MONITOR)
 
 static unsigned char line[16];
 static unsigned char l;
 static unsigned int addr;
 static unsigned char addr_is_data;
 
-static char banner[] PROGMEM = IRMETERMON_VERSION "-irmetermon\r\n";
-static char quickfox[] PROGMEM = "The Quick Brown Fox Jumps Over The Lazy Dog\r\n";
-
-typedef void (*voidfunc)(void);
-voidfunc vp;
-
 
 static char getline(void)
 {
 	char c;
 
-	if (!kbhit())
-		return 0;
+	if (!kbhit()) return 0;
 
 	c = sgetchar();
 
@@ -128,6 +133,7 @@ static void prompt(void)
 	line[0] = '\0';
 	sputchar('>');
 }
+
 
 void monitor(void)
 {
@@ -232,13 +238,14 @@ void monitor(void)
 }
 
 
-#if MINIMAL_MONITOR
+#elif defined(MINIMAL_MONITOR)
 // smaller version, might be useful
 
 void
 monitor(void)
 {
     int i;
+    char c;
 
     if (!kbhit()) return;
 

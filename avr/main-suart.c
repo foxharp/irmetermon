@@ -44,8 +44,8 @@ main()
 
     for (;;) {
 	wdt_reset();
-	if (kbhit())
-	    irmeter_command(sgetchar());
+
+	monitor();
 
 	kill_time();
     }

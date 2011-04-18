@@ -16,19 +16,36 @@
 #define AVG_DEPTH 4
 
 void tracker(int new);
+
 time_t led_time;
+
+#ifdef IRMETER_ADAFRUITU4
+# define PORTLED PORTE
+# define BITLED PE6
+# define DDRLED DDRE
+#elif defined(IRMETER_ATTINY44)
+# define PORTLED PORTB
+# define BITLED PB2
+# define DDRLED DDRB
+#endif
+
+void
+init_led(void)
+{
+    DDRLED |= bit(BITLED);
+}
 
 void
 led_handle(void)
 {
-    if ((PORTE & bit(PE6)) && check_timer(led_time, 100))
-	PORTE &= ~bit(PE6);
+    if ((PORTLED & bit(BITLED)) && check_timer(led_time, 100))
+	PORTLED &= ~bit(BITLED);
 }
 
 void
 led_flash(void)
 {
-	PORTE |= bit(PE6);
+	PORTLED |= bit(BITLED);
 	led_time = get_ms_timer();
 }
 
@@ -214,6 +231,6 @@ irmeter_hwinit(void)
 {
     init_adc();
     init_timer();
-    DDRE |= bit(PE6);
+    init_led();
 }
 

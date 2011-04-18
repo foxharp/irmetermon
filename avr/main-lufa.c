@@ -3,8 +3,45 @@
 #include "common.h"
 #include "irmeter.h"
 
-/** Configures the board hardware and chip peripherals for the demo's functionality. */
-void SetupHardware(void)
+
+// simple character i/o based on LUFA calls 
+static int16_t hit_c;
+uint8_t sgetchar( void )
+{
+    return hit_c & 0xff;
+}
+
+int kbhit(void)
+{
+    hit_c = CDC_Device_ReceiveByte(&VirtualSerial1_CDC_Interface);
+    return hit_c >= 0;
+}
+
+void
+sputchar(char c)
+{
+    if (c == '\n')
+	sputchar('\r');
+    CDC_Device_SendByte(&VirtualSerial1_CDC_Interface, (uint8_t)c);
+}
+
+void
+sputstring(const char *s)
+{
+    while (*s)
+	sputchar(*s++);
+}
+
+void
+sputstring_p(const prog_char *s)
+{
+    char c;
+    while ( (c = pgm_read_byte(s++)) )
+	sputchar(c);
+}
+
+// hardware setup
+void hardware_setup(void)
 {
 	/* Disable watchdog if enabled by bootloader/fuses */
 	MCUSR &= ~(1 << WDRF);
@@ -19,45 +56,10 @@ void SetupHardware(void)
 	irmeter_hwinit();
 }
 
-void
-sputchar(char c)
-{
-    if (c == '\n')
-	sputchar('\r');
-    CDC_Device_SendByte(&VirtualSerial1_CDC_Interface, (uint8_t)c);
-}
-
-static int16_t hit_c;
-uint8_t sgetchar( void )
-{
-    return hit_c & 0xff;
-}
-
-int kbhit(void)
-{
-    hit_c = CDC_Device_ReceiveByte(&VirtualSerial1_CDC_Interface);
-    return hit_c >= 0;
-}
-
-void
-sputstring_p(const prog_char *s)
-{
-    char c;
-    while ( (c = pgm_read_byte(s++)) )
-	sputchar(c);
-}
-
-void
-sputstring(char *s)
-{
-    while (*s)
-	sputchar(*s++);
-}
-
 
 int main(void)
 {
-	SetupHardware();
+	hardware_setup();
 
 	sei();
 

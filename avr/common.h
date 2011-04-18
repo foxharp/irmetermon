@@ -17,9 +17,15 @@ void puthex(unsigned char i);
 void puthex16(unsigned int i);
 void puthex32(long l);
 
+uint8_t sgetchar(void);
+void sputchar(char c);
+void sputstring(const char *s);
+void sputstring_p(const prog_char *s);
+
 #ifdef USE_SUART
 #include "suart.h"
 #else // USE_LUFA
+int kbhit(void);
 #include "main-lufa.h"
 #endif
 

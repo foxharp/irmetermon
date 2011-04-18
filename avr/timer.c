@@ -1,7 +1,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-// #include <avr/pgmspace.h>
+#include <avr/pgmspace.h>
 // #include <avr/sleep.h>
 
 #include "timer.h"
@@ -21,7 +21,11 @@ init_timer(void)
 
 }
 
-ISR(TIMER0_COMPA_vect   )
+#ifdef TIMER0_COMPA_vect   
+ISR(TIMER0_COMPA_vect)
+#else
+ISR(TIM0_COMPA_vect)
+#endif
 {
     static unsigned int prescale;
 

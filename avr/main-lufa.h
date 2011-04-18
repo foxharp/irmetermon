@@ -52,8 +52,3 @@ void EVENT_USB_Device_ControlRequest(void);
 extern USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface;
 extern USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface;
 
-int kbhit(void);
-uint8_t sgetchar(void);
-void sputchar(char c);
-void sputstring(char *s);
-void sputstring_p(const prog_char *s);

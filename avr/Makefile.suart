@@ -2,10 +2,14 @@
 # Makefile for avr programs
 # Paul Fox, April 2007, February 2009
 
-# current code assumes ATTiny2313.  (it uses UART, 16 bit timer, and
-# input capture event interrupt.)
+VERSION = $(shell date +%y%m%d-%H%M)
+
 # MCU = attiny2313
 MCU = attiny44
+OURDEFS = -DUSE_SUART -DIRMETERMON_VERSION="\"$(VERSION)\""
+OURDEFS += -DIRMETER_ATTINY44
+// OURDEFS += -DMINIMAL_MONITOR
+OURDEFS += -DMONITOR
 
 # location of cross-compiler -- edit to suit
 #CROSS = /opt/avr-gcc-070314/bin/avr-
@@ -25,15 +29,11 @@ LFLAGS = -mmcu=$(MCU)
 HOSTCC = gcc
 
 PROG = irmetermon
-SRCS = main-suart.c irmeter.c suart.c
-OBJS = main-suart.o irmeter.o suart.o
-
-CFLAGS += -DUSE_SUART
-
+SRCS = main-suart.c irmeter.c suart.c timer.c monitor.c
+OBJS = $(SRCS:%.c=%.o)
 HDRS = suart.h main.h
 
-VERSION = $(shell date +%y%m%d-%H%M)
-CFLAGS += -DIRMETERMON_VERSION="\"$(VERSION)\""
+CFLAGS += $(OURDEFS)
 
 
 all: $(PROG).hex $(PROG).lss
@@ -80,7 +80,7 @@ foo.out: foo.o
 	$(NM) -n $@ >foo.map
 
 clean:
-	rm -f *.o *.flash *.flash.* *.out *.map *.lst *.lss 
+	rm -f *.o *.flash *.flash.* *.out *.map *.lst *.lss *.hex *.eep *.cof *.elf *.sym
 	
 clobber: clean
 	rm -f $(PROG).hex

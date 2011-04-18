@@ -92,7 +92,7 @@ SIGNAL(SIG_OUTPUT_COMPARE1B)
 
 
 void
-sputchar(u8 val)		// send byte
+sputchar(char val)		// send byte
 {
     if (val == '\n')
 	sputchar('\r');
@@ -102,22 +102,20 @@ sputchar(u8 val)		// send byte
 }
 
 
-#if 1
 void
-sputs_p(const prog_char *s)	// send string
+sputstring(const prog_char *s)	// send string
 {
     while (*s)
 	sputchar(*s++);
 }
-#else
+
 void
-sputs_p(const prog_char *s)
+sputstring_p(const prog_char *s)
 {
     char c;
     while ( (c = pgm_read_byte(s++)) )
 	sputchar(c);
 }
-#endif
 
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)	// tx bit
