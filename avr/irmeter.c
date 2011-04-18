@@ -16,15 +16,21 @@
 #define AVG_DEPTH 4
 
 void tracker(int new);
-time_t led_flash;
+time_t led_time;
 
 void
 led_handle(void)
 {
-    if ((PORTE & bit(PE6)) && check_timer(led_flash, 100))
+    if ((PORTE & bit(PE6)) && check_timer(led_time, 100))
 	PORTE &= ~bit(PE6);
 }
 
+void
+led_flash(void)
+{
+	PORTE |= bit(PE6);
+	led_time = milliseconds;
+}
 
 void
 init_adc(void)
@@ -99,12 +105,15 @@ puthex32(long l)
 
 
 void
-found_pulse(time_t now)
+found_pulse(time_t now, int delta)
 {
     static unsigned long index;
-    puthex32(index);
+    led_flash();
+    puthex32(index++);
     sputchar(':');
     puthex32(now);
+    sputchar(':');
+    puthex16(delta);
     sputchar('\n');
 }
 
@@ -164,24 +173,39 @@ about_time(int went_up, int now)
 }
 
 
+#define UP_ONLY 1
+
 void
 tracker(int new)
 {
     static int old;
+#if ! UP_ONLY
     static time_t up;
+#endif
     time_t now;
+    int delta;
 
     now = ms_timer();
 
     filtered = filter(new);
 
-    if (filtered - old > STEP_UP) {
+    delta = filtered - old;
+
+#if UP_ONLY
+    if (delta > STEP_UP) {
+	found_pulse(now, delta);
+    }
+#else
+    if (!up && delta > STEP_UP) {
 	up = now;
-    } else if (up && about_time(up, now) && (filtered - old) < STEP_DOWN) {
+    } else if (up && about_time(up, now) && delta < STEP_DOWN) {
 	up = 0;
 	if (now > 100) // don't report until adc and averages have settled.
-	    found_pulse(now);
+	    found_pulse(now, delta);
+    } else if (up && now - up > 50) {
+	up = 0;
     }
+#endif
     old = filtered;
 }
 

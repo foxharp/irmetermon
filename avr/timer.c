@@ -34,10 +34,11 @@ ISR(TIMER0_COMPA_vect   )
     if ((prescale++ % N) == 0)
 	milliseconds++;
 
+#if 0
     if (milliseconds % 1000 == 0) {
-	PORTE |= bit(PE6);
-	led_flash = milliseconds;
+	led_flash();
     }
+#endif
 
     TIFR0 = bit(OCF0A);
 }
