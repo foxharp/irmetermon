@@ -14,7 +14,6 @@ void SetupHardware(void)
 	clock_prescale_set(clock_div_1);
 
 	/* Hardware Initialization */
-	// LEDs_Init();
 	USB_Init();
 
 	irmeter_hwinit();
@@ -40,14 +39,6 @@ int kbhit(void)
     return hit_c >= 0;
 }
 
-#if 0
-void
-sputs_p(const prog_char *s)	// send string
-{
-    while (*s)
-	sputchar(*s++);
-}
-#endif
 void
 sputstring_p(const prog_char *s)
 {
@@ -68,7 +59,6 @@ int main(void)
 {
 	SetupHardware();
 
-	// LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	sei();
 
 	for (;;)
@@ -94,3 +84,4 @@ int main(void)
 		led_handle();
 	}
 }
+
