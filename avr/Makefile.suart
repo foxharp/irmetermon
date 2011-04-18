@@ -31,7 +31,7 @@ HOSTCC = gcc
 PROG = irmetermon
 SRCS = main-suart.c irmeter.c suart.c timer.c monitor.c
 OBJS = $(SRCS:%.c=%.o)
-HDRS = suart.h main.h
+HDRS = suart.h common.h timer.h irmeter.h
 
 CFLAGS += $(OURDEFS)
 
@@ -85,3 +85,7 @@ clean:
 clobber: clean
 	rm -f $(PROG).hex
 
+
+format:
+	indent -kr -ts4 -i4 $(SRCS) $(HDRS)
+	rm -f *.[ch]~

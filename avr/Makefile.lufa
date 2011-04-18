@@ -47,12 +47,21 @@ LUFA_OPTS += -D USE_STATIC_OPTIONS="(USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENAB
 include $(LUFA_PATH)/LUFA/makefile
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = main-lufa.c						    \
+OURSRC = main-lufa.c						    \
 	  irmeter.c                                               \
 	  monitor.c                                               \
 	  timer.c                                               \
-	  lufasetup.c                                               \
-	  descriptors.c                                               \
+	  lufasetup.c
+
+OURHDRS = common.h						\
+	  irmeter.h						\
+	  main-lufa.h						\
+	  timer.h
+
+#	  descriptors.h						\
+
+SRC = $(OURSRC)							\
+	  descriptors.c 					\
 	  $(LUFA_SRC_USB)                                             \
 	  $(LUFA_SRC_USBCLASS)
 
@@ -498,6 +507,10 @@ clean:
 # Create object files directory
 $(shell mkdir $(OBJDIR) 2>/dev/null)
 
+
+format:
+	indent -kr -ts4 -i4 $(OURSRC) $(OURHDRS)
+	rm -f *.[ch]~
 
 # Include the dependency files.
 -include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)
