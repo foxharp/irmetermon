@@ -1,4 +1,11 @@
-void irmeter_command(char c);
+/* vi: set sw=4 ts=4: */
+/*
+ * Copyright (c) 2011 Paul Fox, pgf@foxharp.boston.ma.us
+ *
+ * Licensed under GPL version 2, see accompanying LICENSE file
+ * for details.
+ */
+
 void irmeter_hwinit(void);
 void led_handle(void);
 void led_flash(void);

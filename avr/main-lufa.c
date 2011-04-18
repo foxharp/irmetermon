@@ -1,7 +1,28 @@
-#include "main-lufa.h"
+/* vi: set sw=4 ts=4: */
+/*
+ * Copyright (c) 2011 Paul Fox, pgf@foxharp.boston.ma.us
+ *
+ * Licensed under GPL version 2, see accompanying LICENSE file
+ * for details.
+ */
+#include <avr/io.h>
+#include <avr/wdt.h>
+#include <avr/power.h>
+#include <avr/interrupt.h>
+#include <avr/pgmspace.h>
+#include <string.h>
+
 #include "timer.h"
 #include "common.h"
 #include "irmeter.h"
+
+#include "descriptors.h"
+
+#include <LUFA/Version.h>
+#include <LUFA/Drivers/USB/USB.h>
+
+USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface;
+USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface;
 
 char reboot;
 
@@ -11,7 +32,7 @@ void force_reboot(void)
 }
 
 // simple character i/o based on LUFA calls 
-static int16_t hit_c;
+static int hit_c;
 uint8_t sgetchar(void)
 {
 	return hit_c & 0xff;
@@ -101,4 +122,82 @@ int main(void)
 	USB_ShutDown();
 	for (;;);
 
+}
+
+
+/** LUFA CDC Class driver interface configuration and state
+ * information.  This structure is passed to all CDC Class driver
+ * functions, so that multiple instances of the same class within
+ * a device can be differentiated from one another.  This is for
+ * the first CDC interface, which sends strings to the host for
+ * each joystick movement.
+ */
+USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface = {
+	.Config = {
+			   .ControlInterfaceNumber = 0,
+
+			   .DataINEndpointNumber = CDC1_TX_EPNUM,
+			   .DataINEndpointSize = CDC_TXRX_EPSIZE,
+			   .DataINEndpointDoubleBank = false,
+
+			   .DataOUTEndpointNumber = CDC1_RX_EPNUM,
+			   .DataOUTEndpointSize = CDC_TXRX_EPSIZE,
+			   .DataOUTEndpointDoubleBank = false,
+
+			   .NotificationEndpointNumber = CDC1_NOTIFICATION_EPNUM,
+			   .NotificationEndpointSize = CDC_NOTIFICATION_EPSIZE,
+			   .NotificationEndpointDoubleBank = false,
+			   }
+	,
+};
+
+/** LUFA CDC Class driver interface configuration and state information. This structure is
+ *  passed to all CDC Class driver functions, so that multiple instances of the same class
+ *  within a device can be differentiated from one another. This is for the second CDC interface,
+ *  which echos back all received data from the host.
+ */
+#if DUAL
+USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface = {
+	.Config = {
+			   .ControlInterfaceNumber = 2,
+
+			   .DataINEndpointNumber = CDC2_TX_EPNUM,
+			   .DataINEndpointSize = CDC_TXRX_EPSIZE,
+			   .DataINEndpointDoubleBank = false,
+
+			   .DataOUTEndpointNumber = CDC2_RX_EPNUM,
+			   .DataOUTEndpointSize = CDC_TXRX_EPSIZE,
+			   .DataOUTEndpointDoubleBank = false,
+
+			   .NotificationEndpointNumber = CDC2_NOTIFICATION_EPNUM,
+			   .NotificationEndpointSize = CDC_NOTIFICATION_EPSIZE,
+			   .NotificationEndpointDoubleBank = false,
+			   }
+	,
+};
+#endif
+
+
+/** Event handler for the library USB Configuration Changed event. */
+void EVENT_USB_Device_ConfigurationChanged(void)
+{
+	bool ConfigSuccess = true;
+
+	ConfigSuccess &=
+		CDC_Device_ConfigureEndpoints(&VirtualSerial1_CDC_Interface);
+#if DUAL
+	ConfigSuccess &=
+		CDC_Device_ConfigureEndpoints(&VirtualSerial2_CDC_Interface);
+#endif
+
+	// LEDs_SetAllLEDs(ConfigSuccess ? LEDMASK_USB_READY : LEDMASK_USB_ERROR);
+}
+
+/** Event handler for the library USB Control Request reception event. */
+void EVENT_USB_Device_ControlRequest(void)
+{
+	CDC_Device_ProcessControlRequest(&VirtualSerial1_CDC_Interface);
+#if DUAL
+	CDC_Device_ProcessControlRequest(&VirtualSerial2_CDC_Interface);
+#endif
 }

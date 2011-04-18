@@ -1,6 +1,4 @@
-/* this file included in GPL'ed irmetermon by written permission of the
- * author.
- */
+/* vi: set sw=4 ts=4: */
 /************************************************************************/
 /*                                                                      */
 /*                      Software UART using T1                          */
@@ -9,6 +7,12 @@
 /*                      danni@specs.de                                  */
 /*                                                                      */
 /************************************************************************/
+/*
+ * This file included in irmetermon by written permission of the
+ * author.  irmetermon is licensed under GPL version 2, see accompanying
+ * LICENSE file for details.
+ */
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>

@@ -1,4 +1,10 @@
-
+/* vi: set sw=4 ts=4: */
+/*
+ * Copyright (c) 2011 Paul Fox, pgf@foxharp.boston.ma.us
+ *
+ * Licensed under GPL version 2, see accompanying LICENSE file
+ * for details.
+ */
 #define XTAL	16000000		// 1Mhz, default RC oscillator config
 
 #define	BAUD	38400
@@ -17,14 +23,15 @@ void puthex(unsigned char i);
 void puthex16(unsigned int i);
 void puthex32(long l);
 
-uint8_t sgetchar(void);
+unsigned char sgetchar(void);
 void sputchar(char c);
 void sputstring(const char *s);
 void sputstring_p(const prog_char * s);
+
+void force_reboot(void);
 
 #ifdef USE_SUART
 #include "suart.h"
 #else							// USE_LUFA
 int kbhit(void);
-#include "main-lufa.h"
 #endif

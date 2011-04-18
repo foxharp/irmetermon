@@ -1,3 +1,10 @@
+/* vi: set sw=4 ts=4: */
+/*
+ * Copyright (c) 2011 Paul Fox, pgf@foxharp.boston.ma.us
+ *
+ * Licensed under GPL version 2, see accompanying LICENSE file for details.
+ * for details.
+ */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -61,7 +68,7 @@ time_t get_ms_timer(void)
 	return ms;
 }
 
-unsigned char check_timer(time_t time0, int duration)
+unsigned char check_timer(time_t base, int duration)
 {
-	return get_ms_timer() > time0 + duration;
+	return get_ms_timer() > (base + duration);
 }

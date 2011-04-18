@@ -50,12 +50,10 @@ include $(LUFA_PATH)/LUFA/makefile
 OURSRC = main-lufa.c						    \
 	  irmeter.c                                               \
 	  monitor.c                                               \
-	  timer.c                                               \
-	  lufasetup.c
+	  timer.c
 
 OURHDRS = common.h						\
 	  irmeter.h						\
-	  main-lufa.h						\
 	  timer.h
 
 #	  descriptors.h						\

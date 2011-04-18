@@ -1,3 +1,16 @@
+/************************************************************************/
+/*                                                                      */
+/*                      Software UART using T1                          */
+/*                                                                      */
+/*              Author: P. Dannegger                                    */
+/*                      danni@specs.de                                  */
+/*                                                                      */
+/************************************************************************/
+/*
+ * This file included in irmetermon by written permission of the
+ * author.  irmetermon is licensed under GPL version 2, see accompanying
+ * LICENSE file for details.
+ */
 #ifdef _AVR_IOM8_H_
 # define SRX     PB0			// ICP on Mega8
 # define SRXPIN  PINB
