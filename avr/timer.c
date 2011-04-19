@@ -46,7 +46,11 @@ ISR(TIM0_COMPA_vect)
 
 #if 0
 	if (milliseconds % 1000 == 0) {
-		led_flash();
+		// led_flash();
+		extern unsigned int adc_counter;
+		sputstring("adccnt: ");
+		puthex16(adc_counter);
+		sputchar('\n');
 	}
 #endif
 
