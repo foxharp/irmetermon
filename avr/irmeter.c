@@ -55,10 +55,17 @@ void led_flash(void)
 
 void init_adc(void)
 {
-	// prescalar is 128 (for now -- FIXME)
-	ADCSRA |= bit(ADPS2) | bit(ADPS1) | bit(ADPS0);
+	// prescalar is 128.  that's okay for 16Mhz, but not for 1Mhz
+#ifdef IRMETER_ADAFRUITU4
+	ADCSRA |= bit(ADPS2) | bit(ADPS1) | bit(ADPS0); // 16Mhz/128 --> 125khz
+#elif defined(IRMETER_ATTINY44)
+     // ADCSRA |= bit(ADPS1);			// 1Mhz/4 --> 250khz
+	ADCSRA |= bit(ADPS1) | bit(ADPS0);	// 1Mhz/8 --> 125khz
+#endif
 
-	ADMUX |= bit(REFS0) | bit(ADLAR);	// use avcc, and get 8-bit results
+	ADMUX |= bit(REFS0) | bit(ADLAR);	// use ADC0, use avcc, and get 8-bit results
+
+	DIDR0 |= bit(ADC0D);		// disable ADC0 (PF0) digital input
 
 	ADCSRA |= bit(ADEN);		// enable
 	ADCSRA |= bit(ADIE);		// enable Interrupt
