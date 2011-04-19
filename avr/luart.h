@@ -8,7 +8,12 @@
 uint8_t sgetchar(void);
 int kbhit(void);
 void sputchar(char c);
-void sputstring(const char *s);
 void sputstring_p(const prog_char * s);
+#if ! ALL_STRINGS_PROGMEM
+void sputstring(const char *s);
+#else
+#define sputstring(s) sputstring_p(PSTR(s))
+#endif
+
 void luart_run(void);
 void luart_init(void);

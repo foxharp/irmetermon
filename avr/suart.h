@@ -50,6 +50,14 @@
 # error
 #endif
 
+void sputchar(char c);
+void sputstring_p(const prog_char * s);
+#if ! ALL_STRINGS_PROGMEM
+void sputstring(const char *s);
+#else
+#define sputstring(s) sputstring_p(PSTR(s))
+#endif
+
 #ifndef NO_RECEIVE
 extern volatile unsigned char srx_done;
 #define kbhit()	(srx_done)		// true if byte received

@@ -106,11 +106,13 @@ void sputchar(char val)			// send byte
 }
 
 
+#if ! ALL_STRINGS_PROGMEM
 void sputstring(const prog_char * s)	// send string
 {
 	while (*s)
 		sputchar(*s++);
 }
+#endif
 
 void sputstring_p(const prog_char * s)
 {

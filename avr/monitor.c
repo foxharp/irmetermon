@@ -25,9 +25,14 @@
 #define tohex(c) (((c) >= 'a') ? ((c) - 'a' + 10) : ((c) - '0'))
 
 
-static char banner[] PROGMEM = IRMETERMON_VERSION "-irmetermon\r\n";
+#if 0
+static char banner[] PROGMEM = IRMETERMON_VERSION "-irmetermon\n";
 static char quickfox[] PROGMEM =
-	"The Quick Brown Fox Jumps Over The Lazy Dog\r\n";
+	"The Quick Brown Fox Jumps Over The Lazy Dog\n";
+#else
+#define BANNER IRMETERMON_VERSION "-irmetermon\n"
+#define QUICKFOX "The Quick Brown Fox Jumps Over The Lazy Dog\n"
+#endif
 
 #if defined(MONITOR)
 
@@ -146,12 +151,12 @@ void monitor(void)
 		break;
 
 	case 'v':
-		sputstring_p(banner);
+		sputstring(BANNER);
 		break;
 
 	case 'q':
 		for (i = 0; i < 20; i++)
-			sputstring_p(quickfox);
+			sputstring(QUICKFOX);
 		break;
 
 	case 'U':
@@ -211,7 +216,7 @@ void monitor(void)
 		break;
 
 	default:
-		sputstring("?");
+		sputchar('?');
 	}
 
 	prompt();
@@ -234,12 +239,12 @@ void monitor(void)
 
 	switch (c) {
 	case 'v':
-		sputstring(banner);
+		sputstring(BANNER);
 		break;
 
 	case 'x':
 		for (i = 0; i < 20; i++)
-			sputstring(quickfox);
+			sputstring(QUICKFOX);
 		break;
 
 	case 'U':

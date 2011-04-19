@@ -18,8 +18,12 @@ void puthex32(long l);
 
 unsigned char sgetchar(void);
 void sputchar(char c);
-void sputstring(const char *s);
 void sputstring_p(const prog_char * s);
+#if ! ALL_STRINGS_PROGMEM
+void sputstring(const char *s);
+#else
+#define sputstring(s) sputstring_p(PSTR(s))
+#endif
 
 void force_reboot(void);
 

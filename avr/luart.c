@@ -153,11 +153,13 @@ void sputchar(char c)
 	CDC_Device_SendByte(&VirtualSerial1_CDC_Interface, (uint8_t) c);
 }
 
+#if ! ALL_STRINGS_PROGMEM
 void sputstring(const char *s)
 {
 	while (*s)
 		sputchar(*s++);
 }
+#endif
 
 void sputstring_p(const prog_char * s)
 {
