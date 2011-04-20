@@ -17,9 +17,8 @@
 #include "timer.h"
 
 
-#define STEP_UP		10
-#define STEP_DOWN	8
-#define PULSE_LEN	10 // ms
+#define STEP_SIZE	10 // adc steps
+#define PULSE_LEN	10 // milliseconds
 
 void tracker(int new);
 
@@ -129,15 +128,13 @@ void puthex32(long l)
 }
 
 
-void found_pulse(time_t now, int delta)
+void found_pulse(time_t now)
 {
 	static unsigned long index;
 	led_flash();
 	puthex32(index++);
 	sputchar(':');
 	puthex32(now);
-	sputchar(':');
-	puthex16(delta);
 	sputchar('\n');
 }
 
@@ -249,10 +246,10 @@ void tracker(int new)
 	static int old;
 	static time_t up;
 	time_t now;
-	int delta;
+	char delta;
 
 	if (!step_size)
-		step_size = STEP_UP;
+		step_size = STEP_SIZE;
 
 	now = get_ms_timer();
 
@@ -279,16 +276,17 @@ void tracker(int new)
 
 	if (up_only) {
 		if (delta > step_size) {
-			found_pulse(now, delta);
+			found_pulse(now);
 		}
 	} else {
 		if (!up && delta > step_size) {
 			up = now;
-		} else if (up && about_time(up, now) && delta < -step_size) {
+		} else if (up && about_time(up, now) &&
+				delta < -(step_size/2)) {
 			up = 0;
 			// don't report until adc and averages have settled.
 			if (now > 100)
-				found_pulse(now, delta);
+				found_pulse(now);
 		} else if (up && now - up > 50) {
 			up = 0;
 		}
