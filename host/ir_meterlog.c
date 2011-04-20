@@ -335,16 +335,22 @@ interval_log(log_info_t *li, time_t wh_tick_time)
 void
 loop(void)
 {
-    int i;
-    long l, u;
+    int r;
+    long s, u;
+    int i, l;
     struct timeval wh_tick[1];
 
     while (1) {
-	i = scanf(" s0x%lx u0x%lx", &l, &u);
-	if (i != 2) {
+	r = scanf(" s0x%lx u0x%lx i%d l%d", &s, &u, &i, &l);
+	if (r != 4) {
 	    fprintf(stderr, "Short or failed read from pipe, quitting\n");
 	    exit(1);
 	}
+
+	if (i != l+1) {
+	    fprintf(stderr, "Reported pulse index mismatch %d and %d\n", i, l);
+	}
+
 
 	wh_tick->tv_sec = (time_t) l;
 	wh_tick->tv_usec = (suseconds_t) u;

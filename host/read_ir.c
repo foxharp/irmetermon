@@ -75,17 +75,21 @@ loop(FILE *fp)
 {
     int n;
     struct timeval tv;
-    int index, tstamp, delta;
+    unsigned int index, tstamp;
+    unsigned int last_index = 0;
 
     while (1) {
-	n = fscanf(fp, "%x:%x:%x ", &index, &tstamp, &delta);
+	n = fscanf(fp, "%x:%x ", &index, &tstamp);
 	if (n != 3) {
 	    fprintf(stderr, "Bad scanf from tty (%d), quitting\n", n);
 	    exit(1);
 	}
+
 	gettimeofday(&tv, 0);
-	printf("s0x%lx u0x%lx\n",
-	       (unsigned long) tv.tv_sec, (unsigned long) tv.tv_usec);
+	printf("s0x%lx u0x%lx i%d l%d\n",
+	       (unsigned long) tv.tv_sec, (unsigned long) tv.tv_usec,
+	       index, last_index);
+	last_index = index;
     }
 }
 
