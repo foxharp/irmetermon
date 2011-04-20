@@ -17,10 +17,9 @@
 
 
 #define MS			1000		// or whatever
-#define STEP_UP		16
-#define STEP_DOWN	16
+#define STEP_UP		10
+#define STEP_DOWN	10
 #define PULSE_LEN	10 * MS
-#define AVG_DEPTH	4
 
 void tracker(int new);
 
@@ -142,25 +141,57 @@ void found_pulse(time_t now, int delta)
 	sputchar('\n');
 }
 
+static unsigned char vals[8];
+
+#if STREAMING_AVG
 int avgfilter(int val)
 {
 	static int avg;
+
+#define AVG_DEPTH	4
 
 	avg = avg - (avg / AVG_DEPTH) + val;
 
 	return avg / AVG_DEPTH;
 }
+#else
+int avgfilter(int val)
+{
+	static unsigned char i;
+
+#define NAVG	3
+
+	vals[i % NAVG] = val;
+//	if (i++ < NAVG)
+//		return val;
+	i++;
+	return (vals[0] + vals[1] + vals[2]) / NAVG;
+
+}
+#endif
 
 // nifty value swapper
 #define swap(a,b) {(a)=(b)^(a); (b)=(a)^(b); (a)=(b)^(a);}
 
-static unsigned char o_vals[3];
 
-int median(void)
+int median5(void)
 {
-	unsigned char a = o_vals[0];
-	unsigned char b = o_vals[1];
-	unsigned char c = o_vals[2];
+	unsigned char i, j;
+#define K 5
+	for (i = 0; i < K - 1; i++) {
+		for (j = i + 1; j < K; j++) {
+			if (vals[i] > vals[j])
+				swap(vals[i], vals[j]);
+		}
+	}
+	return vals[3];
+}
+
+int median3(void)
+{
+	unsigned char a = vals[0];
+	unsigned char b = vals[1];
+	unsigned char c = vals[2];
 
 	// sort the values
 	if (a > b)
@@ -178,11 +209,11 @@ int medianfilter(int val)
 {
 	static unsigned char i;
 
-	o_vals[i % 3] = val;
-//	if (i++ < 3)
+	vals[i % 5] = val;
+//	if (i++ < 5)
 //		return val;
 	i++;
-	return median();
+	return median5();
 }
 
 #define abs(a) (((a) >= 0) ? (a) : -(a))
@@ -214,7 +245,7 @@ void tracker(int new)
 	if (adc_fastdump) {
 		puthex(new);
 		sputchar(' ');
-		sputchar(' ');
+		sputchar("0123456789abcdef"[now&0xf]); /* last digit of time */
 	}
 
 	now = get_ms_timer();
