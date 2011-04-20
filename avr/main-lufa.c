@@ -5,6 +5,7 @@
  * Licensed under GPL version 2, see accompanying LICENSE file
  * for details.
  */
+#include <setjmp.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -15,6 +16,8 @@
 #include "luart.h"
 #include "common.h"
 #include "irmeter.h"
+
+jmp_buf restartbuf;
 
 void hardware_setup(void)
 {
@@ -32,6 +35,11 @@ void hardware_setup(void)
 
 int main(void)
 {
+	if (setjmp(restartbuf)) {
+		cli();
+		luart_deinit();
+	}
+
 	hardware_setup();
 
 	sei();

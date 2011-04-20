@@ -41,6 +41,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <string.h>
+#include <setjmp.h>
 
 #include "timer.h"
 #include "common.h"
@@ -148,9 +149,14 @@ int kbhit(void)
 
 void sputchar(char c)
 {
+	uint8_t ret;
+	extern jmp_buf restartbuf;
+
 	if (c == '\n')
 		sputchar('\r');
-	CDC_Device_SendByte(&VirtualSerial1_CDC_Interface, (uint8_t) c);
+	ret = CDC_Device_SendByte(&VirtualSerial1_CDC_Interface, (uint8_t) c);
+	if (ret != ENDPOINT_READYWAIT_NoError)
+		longjmp(restartbuf, 1);
 }
 
 #if ! ALL_STRINGS_PROGMEM
@@ -171,6 +177,11 @@ void sputstring_p(const prog_char * s)
 void luart_init(void)
 {
 	USB_Init();
+}
+
+void luart_deinit(void)
+{
+	USB_ShutDown();
 }
 
 void luart_run(void)
