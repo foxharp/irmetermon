@@ -142,12 +142,12 @@ void monitor(void)
 		break;
 
 	case 'a':
-		adc_show = gethex();
-		adc_show_time = get_ms_timer();
+		adc_fastdump = !adc_fastdump;
 		break;
 
 	case 'A':
-		adc_fastdump = gethex();
+		adc_show = gethex();
+		adc_show_time = get_ms_timer();
 		break;
 
 	case 'm':
