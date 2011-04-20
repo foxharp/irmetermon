@@ -11,15 +11,15 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/wdt.h>
+#include <string.h>
 
 #include "common.h"
 #include "timer.h"
 
 
-#define MS			1000		// or whatever
 #define STEP_UP		10
-#define STEP_DOWN	10
-#define PULSE_LEN	10 * MS
+#define STEP_DOWN	8
+#define PULSE_LEN	10 // ms
 
 void tracker(int new);
 
@@ -142,6 +142,7 @@ void found_pulse(time_t now, int delta)
 }
 
 static unsigned char vals[8];
+static unsigned char svals[8];
 
 #if STREAMING_AVG
 int avgfilter(int val)
@@ -176,15 +177,28 @@ int avgfilter(int val)
 
 int median5(void)
 {
-	unsigned char i, j;
+	unsigned char i, j, t;
 #define K 5
+	memcpy(svals, vals, 5);
 	for (i = 0; i < K - 1; i++) {
 		for (j = i + 1; j < K; j++) {
-			if (vals[i] > vals[j])
-				swap(vals[i], vals[j]);
+			if (svals[i] > svals[j]) {
+				t = svals[i];
+				svals[i] = svals[j];
+				svals[j] = t;
+			}
 		}
 	}
-	return vals[3];
+	return svals[K/2];
+}
+
+int medianfilter5(int val)
+{
+	static unsigned char i;
+
+	vals[i] = val;
+	if (++i == 5) i = 0;
+	return median5();
 }
 
 int median3(void)
@@ -205,15 +219,13 @@ int median3(void)
 	return b;
 }
 
-int medianfilter(int val)
+int medianfilter3(int val)
 {
 	static unsigned char i;
 
-	vals[i % 5] = val;
-//	if (i++ < 5)
-//		return val;
-	i++;
-	return median5();
+	vals[i] = val;
+	if (++i == 3) i = 0;
+	return median3();
 }
 
 #define abs(a) (((a) >= 0) ? (a) : -(a))
@@ -222,7 +234,7 @@ int about_time(int went_up, int now)
 {
 	// within 1ms of expected pulse length?
 	int diff = ((now - went_up) - PULSE_LEN);
-	return abs(diff) < (1 * MS);
+	return abs(diff) <= 1;
 }
 
 
@@ -242,18 +254,21 @@ void tracker(int new)
 	if (!step_size)
 		step_size = STEP_UP;
 
+	now = get_ms_timer();
+
 	if (adc_fastdump) {
 		puthex(new);
 		sputchar(' ');
 		sputchar("0123456789abcdef"[now&0xf]); /* last digit of time */
 	}
 
-	now = get_ms_timer();
-
-	if (use_median)
-		filtered = medianfilter(new);
+	if (use_median == 5)
+		filtered = medianfilter5(new);
+	else if (use_median == 3)
+		filtered = medianfilter3(new);
 	else
 		filtered = avgfilter(new);
+
 	if (adc_fastdump) {
 		sputchar('(');
 		puthex(filtered);
@@ -286,4 +301,5 @@ void irmeter_hwinit(void)
 	init_adc();
 	init_timer();
 	init_led();
+	use_median = 5;
 }
