@@ -146,6 +146,22 @@ void monitor(void)
 		adc_show_time = get_ms_timer();
 		break;
 
+	case 'A':
+		adc_fastdump = gethex();
+		break;
+
+	case 'm':
+		use_median = gethex();
+		break;
+
+	case 'u':
+		up_only = gethex();
+		break;
+
+	case 's':
+		step_size = gethex();
+		break;
+
 	case 'D':
 		// irmeter_set_debug(gethex());
 		break;

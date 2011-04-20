@@ -17,8 +17,8 @@
 
 
 #define MS			1000		// or whatever
-#define STEP_UP		10
-#define STEP_DOWN	-10
+#define STEP_UP		16
+#define STEP_DOWN	16
 #define PULSE_LEN	10 * MS
 #define AVG_DEPTH	4
 
@@ -64,7 +64,9 @@ void init_adc(void)
 	ADCSRA |= bit(ADPS1) | bit(ADPS0);	// 1Mhz/8 --> 125khz
 #endif
 
-	ADMUX |= bit(REFS0) | bit(ADLAR);	// ADC0, Avcc, 8-bit results
+	// ADC0, Avcc, 8-bit results, channel 11
+	ADMUX |= bit(REFS0) | bit(ADLAR) | bit(MUX1) | bit(MUX0);
+	ADCSRB |= bit(MUX5);
 
 	DIDR0 |= bit(ADC0D);		// disable ADC0 (PF0) digital input
 
@@ -140,9 +142,7 @@ void found_pulse(time_t now, int delta)
 	sputchar('\n');
 }
 
-#define AVERAGING 1
-#ifdef AVERAGING
-int filter(int val)
+int avgfilter(int val)
 {
 	static int avg;
 
@@ -150,7 +150,6 @@ int filter(int val)
 
 	return avg / AVG_DEPTH;
 }
-#else							// median filter
 
 // nifty value swapper
 #define swap(a,b) {(a)=(b)^(a); (b)=(a)^(b); (a)=(b)^(a);}
@@ -175,16 +174,16 @@ int median(void)
 	return b;
 }
 
-int filter(int val)
+int medianfilter(int val)
 {
 	static unsigned char i;
 
 	o_vals[i % 3] = val;
-	if (i++ < 3)
-		return val;
+//	if (i++ < 3)
+//		return val;
+	i++;
 	return median();
 }
-#endif
 
 #define abs(a) (((a) >= 0) ? (a) : -(a))
 
@@ -196,38 +195,58 @@ int about_time(int went_up, int now)
 }
 
 
-#define UP_ONLY 1
+
+char adc_fastdump;
+char use_median;
+char up_only;
+char step_size;
 
 void tracker(int new)
 {
 	static int old;
-#if ! UP_ONLY
 	static time_t up;
-#endif
 	time_t now;
 	int delta;
 
+	if (!step_size)
+		step_size = STEP_UP;
+
+	if (adc_fastdump) {
+		puthex(new);
+		sputchar(' ');
+		sputchar(' ');
+	}
+
 	now = get_ms_timer();
 
-	filtered = filter(new);
+	if (use_median)
+		filtered = medianfilter(new);
+	else
+		filtered = avgfilter(new);
+	if (adc_fastdump) {
+		sputchar('(');
+		puthex(filtered);
+		sputchar(')');
+	}
 
 	delta = filtered - old;
 
-#if UP_ONLY
-	if (delta > STEP_UP) {
-		found_pulse(now, delta);
-	}
-#else
-	if (!up && delta > STEP_UP) {
-		up = now;
-	} else if (up && about_time(up, now) && delta < STEP_DOWN) {
-		up = 0;
-		if (now > 100)			// don't report until adc and averages have settled.
+	if (up_only) {
+		if (delta > step_size) {
 			found_pulse(now, delta);
-	} else if (up && now - up > 50) {
-		up = 0;
+		}
+	} else {
+		if (!up && delta > step_size) {
+			up = now;
+		} else if (up && about_time(up, now) && delta < -step_size) {
+			up = 0;
+			// don't report until adc and averages have settled.
+			if (now > 100)
+				found_pulse(now, delta);
+		} else if (up && now - up > 50) {
+			up = 0;
+		}
 	}
-#endif
 	old = filtered;
 }
 

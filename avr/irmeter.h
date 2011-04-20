@@ -10,3 +10,8 @@ void irmeter_hwinit(void);
 void led_handle(void);
 void led_flash(void);
 void show_adc(void);
+
+extern char adc_fastdump;
+extern char use_median;
+extern char up_only;
+extern char step_size;
