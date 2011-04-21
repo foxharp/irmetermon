@@ -243,6 +243,9 @@ typedef struct log_info {
 	/* choose a logfile name, based on timeslot */
 	char *(*log_name) (time_t seconds);
 
+	/* length of interval */
+	int interval;
+
 	/* runtime: */
 	/* current accumulation interval */
 	time_t cur_interval;
@@ -296,15 +299,18 @@ char *ten_minute_log_name(time_t t)
 log_info_t minute_log_info = {
   cur_interval_calc:which_minute,
   log_name:minute_log_name,
+  interval:60,
 };
 
 log_info_t ten_minute_log_info = {
   cur_interval_calc:which_ten_minutes,
   log_name:ten_minute_log_name,
+  interval:600,
 };
 
 void interval_log(log_info_t * li, time_t wh_tick_time)
 {
+	time_t intvl, newintvl;
 	if (li->cur_interval == 0)
 		li->cur_interval = li->cur_interval_calc(&wh_tick_time);
 
@@ -312,12 +318,17 @@ void interval_log(log_info_t * li, time_t wh_tick_time)
 		li->wH_count++;
 	} else if (li->cur_interval != li->last_logged_interval) {
 		if (li->wH_count) {
-			log_wH(li->log_name(li->cur_interval), li->cur_interval,
-				   li->wH_count);
+			log_wH(li->log_name(li->cur_interval),
+				   li->cur_interval, li->wH_count);
 			li->last_logged_interval = li->cur_interval;
 		}
+		newintvl = li->cur_interval_calc(&wh_tick_time);
+		for (intvl = li->cur_interval + li->interval;
+			 intvl < newintvl; intvl += li->interval) {
+			log_wH(li->log_name(intvl), intvl, 0);
+		}
 		li->wH_count = 1;
-		li->cur_interval = li->cur_interval_calc(&wh_tick_time);
+		li->cur_interval = newintvl;
 	}
 }
 
