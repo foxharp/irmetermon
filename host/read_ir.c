@@ -42,133 +42,129 @@
 
 char *me;
 
-void
-usage(char *me)
+void usage(char *me)
 {
-    fprintf(stderr,
-	"usage: '%s tty-name'\n"
-	" use '%s -' to read from stdin\n"
-	" use '%s /dev/tty' to test interactively\n", me, me, me);
-    exit(1);
+	fprintf(stderr,
+			"usage: '%s tty-name'\n"
+			" use '%s -' to read from stdin\n"
+			" use '%s /dev/tty' to test interactively\n", me, me, me);
+	exit(1);
 }
 
 struct termios oldterm[1], newterm[1];
 int ir_fd;
 int is_tty;
 
-void
-restore_tty(void)
+void restore_tty(void)
 {
-    if (is_tty)
-	tcsetattr(ir_fd, TCSAFLUSH, oldterm);
+	if (is_tty)
+		tcsetattr(ir_fd, TCSAFLUSH, oldterm);
 }
 
-void
-restore_tty_sighandler(int n)
+void restore_tty_sighandler(int n)
 {
-    restore_tty();
-    exit(1);
-}
-
-void
-loop(FILE *fp)
-{
-    int n;
-    struct timeval tv;
-    unsigned int index, tstamp;
-    unsigned int last_index = 0;
-
-    while (1) {
-	n = fscanf(fp, "%x:%x ", &index, &tstamp);
-	if (n != 3) {
-	    fprintf(stderr, "Bad scanf from tty (%d), quitting\n", n);
-	    exit(1);
-	}
-
-	gettimeofday(&tv, 0);
-	printf("s0x%lx u0x%lx i%d l%d\n",
-	       (unsigned long) tv.tv_sec, (unsigned long) tv.tv_usec,
-	       index, last_index);
-	last_index = index;
-    }
-}
-
-
-int
-main(int argc, char *argv[])
-{
-    int modemctl;
-    FILE *ir_fp;
-
-    me = basename(argv[0]);
-
-    if (argc == 1 || (argv[1][0] == '-' && argv[1][1] != '\0'))
-	usage(argv[0]);
-
-    if (!strcmp(argv[1], "-")) {
-	is_tty = 0;
-	ir_fd = 0;
-    } else {
-	is_tty = 1;
-	ir_fd = open(argv[1], O_RDONLY);
-	if (ir_fd < 0) {
-	    fprintf(stderr, "%s: opening given tty: %m\n", me);
-	    exit(1);
-	}
-    }
-
-    if (is_tty) {
-	if (tcgetattr(ir_fd, oldterm)) {
-	    fprintf(stderr, "%s: getting attributes of tty: %m\n", me);
-	    exit(1);
-	}
-
-	*newterm = *oldterm;
-
-	atexit(restore_tty);
-	signal(SIGHUP, restore_tty_sighandler);
-	signal(SIGINT, restore_tty_sighandler);
-	signal(SIGQUIT, restore_tty_sighandler);
-	signal(SIGTERM, restore_tty_sighandler);
-
-
-	/* be sure IGNBRK/BRKING/IGNPAR/PAMRK are all the way we
-	 * want them -- we just want a single '\0' character when
-	 * an rs232 BREAK occurs. */
-	newterm->c_iflag &= ~(IGNBRK | BRKINT | IGNPAR | PARMRK);
-	newterm->c_lflag &= ~(ICANON);
-
-	/*
-	 * at 1200 baud, a BREAK is a line assertion that lasts longer
-	 * than 4.17ms.  we expect the IR LED to assert for 10ms.
-	 */
-	if (cfsetspeed(newterm, B38400) || tcsetattr(ir_fd, TCSANOW, newterm)) {
-	    fprintf(stderr, "%s: setting attributes for tty: %m\n", me);
-	    exit(1);
-	}
-
-	/* set up DTR and RTS with the right polarity:  disable RTS and
-	 * enable DTR to leave RTS negative and DTR positive.
-	 */
-	if (ioctl(ir_fd, TIOCMGET, &modemctl) ||
-	    (modemctl &= ~TIOCM_RTS,
-	     modemctl |= TIOCM_DTR, ioctl(ir_fd, TIOCMSET, &modemctl))) {
-	    fprintf(stderr, "%s: getting or setting RTS: %m\n", me);
-	    // exit(1);
-	}
-    }
-
-    setlinebuf(stdout);
-
-    ir_fp = fdopen(ir_fd, "r");
-    if (!ir_fp) {
-	fprintf(stderr, "%s: can't fdopen the ir file descriptor\n", me);
+	restore_tty();
 	exit(1);
-    }
+}
+
+void loop(FILE * fp)
+{
+	int n;
+	struct timeval tv;
+	unsigned int index, tstamp;
+	unsigned int last_index = 0;
+
+	while (1) {
+		n = fscanf(fp, "%x:%x ", &index, &tstamp);
+		if (n != 3) {
+			fprintf(stderr, "Bad scanf from tty (%d), quitting\n", n);
+			exit(1);
+		}
+
+		gettimeofday(&tv, 0);
+		printf("s0x%lx u0x%lx i%d l%d\n",
+			   (unsigned long) tv.tv_sec, (unsigned long) tv.tv_usec,
+			   index, last_index);
+		last_index = index;
+	}
+}
 
 
-    loop(ir_fp);
+int main(int argc, char *argv[])
+{
+	int modemctl;
+	FILE *ir_fp;
 
-    return 0;
+	me = basename(argv[0]);
+
+	if (argc == 1 || (argv[1][0] == '-' && argv[1][1] != '\0'))
+		usage(argv[0]);
+
+	if (!strcmp(argv[1], "-")) {
+		is_tty = 0;
+		ir_fd = 0;
+	} else {
+		is_tty = 1;
+		ir_fd = open(argv[1], O_RDONLY);
+		if (ir_fd < 0) {
+			fprintf(stderr, "%s: opening given tty: %m\n", me);
+			exit(1);
+		}
+	}
+
+	if (is_tty) {
+		if (tcgetattr(ir_fd, oldterm)) {
+			fprintf(stderr, "%s: getting attributes of tty: %m\n", me);
+			exit(1);
+		}
+
+		*newterm = *oldterm;
+
+		atexit(restore_tty);
+		signal(SIGHUP, restore_tty_sighandler);
+		signal(SIGINT, restore_tty_sighandler);
+		signal(SIGQUIT, restore_tty_sighandler);
+		signal(SIGTERM, restore_tty_sighandler);
+
+
+		/* be sure IGNBRK/BRKING/IGNPAR/PAMRK are all the way we
+		 * want them -- we just want a single '\0' character when
+		 * an rs232 BREAK occurs. */
+		newterm->c_iflag &= ~(IGNBRK | BRKINT | IGNPAR | PARMRK);
+		newterm->c_lflag &= ~(ICANON);
+
+		/*
+		 * at 1200 baud, a BREAK is a line assertion that lasts longer
+		 * than 4.17ms.  we expect the IR LED to assert for 10ms.
+		 */
+		if (cfsetspeed(newterm, B38400)
+			|| tcsetattr(ir_fd, TCSANOW, newterm)) {
+			fprintf(stderr, "%s: setting attributes for tty: %m\n", me);
+			exit(1);
+		}
+
+		/* set up DTR and RTS with the right polarity:  disable RTS and
+		 * enable DTR to leave RTS negative and DTR positive.
+		 */
+		if (ioctl(ir_fd, TIOCMGET, &modemctl) ||
+			(modemctl &= ~TIOCM_RTS,
+			 modemctl |= TIOCM_DTR, ioctl(ir_fd, TIOCMSET, &modemctl))) {
+			fprintf(stderr, "%s: getting or setting RTS: %m\n", me);
+			// exit(1);
+		}
+	}
+
+	setlinebuf(stdout);
+
+	ir_fp = fdopen(ir_fd, "r");
+	if (!ir_fp) {
+		fprintf(stderr, "%s: can't fdopen the ir file descriptor\n", me);
+		exit(1);
+	}
+
+
+	loop(ir_fp);
+
+	return 0;
 
 }
