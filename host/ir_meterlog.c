@@ -132,7 +132,7 @@ double get_recent_avg_delta(void)
 	return interval / (i - 1);
 }
 
-double get_recent_watts(void)
+int get_recent_watts(void)
 {
 	double t;
 
@@ -149,7 +149,7 @@ double get_recent_watts(void)
 	if (t == 0)
 		return 0;
 
-	return 3600.0 / t;
+	return (3600.0 / t) + 0.5;
 }
 
 void write_watts_now(void)
@@ -163,7 +163,7 @@ void write_watts_now(void)
 		return;
 	}
 
-	fprintf(f, "%.2f\n", get_recent_watts());
+	fprintf(f, "%d\n", get_recent_watts());
 	fclose(f);
 	if (rename(LOG_WATTS_NOW_FILE ".tmp", LOG_WATTS_NOW_FILE)) {
 		fprintf(stderr, "%s: renaming to %s: %m\n", me,
@@ -178,7 +178,7 @@ void write_watts_now(void)
 void sigusr1_handle(int n)
 {
 	write_watts_now();
-	printf("avg delta: %f, watts %f\n",
+	printf("avg delta: %f, watts %d\n",
 		   get_recent_avg_delta(), get_recent_watts());
 }
 #endif
