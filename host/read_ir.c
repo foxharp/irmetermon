@@ -76,7 +76,7 @@ void loop(FILE * fp)
 
 	while (1) {
 		n = fscanf(fp, "%x:%x ", &index, &tstamp);
-		if (n != 3) {
+		if (n != 2) {
 			fprintf(stderr, "Bad scanf from tty (%d), quitting\n", n);
 			exit(1);
 		}
