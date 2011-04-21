@@ -11,3 +11,7 @@ clean:
 size:
 	size read_ir ir_meterlog
 
+format:
+	indent -kr -ts4 -i4 read_ir.c ir_meterlog.c read_ir_breakdetect.c
+	rm -f *.[ch]~
+
