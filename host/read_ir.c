@@ -80,6 +80,7 @@ void loop(FILE * fp)
 			fprintf(stderr, "Bad scanf from tty (%d), quitting\n", n);
 			exit(1);
 		}
+		// we don't currently use the timestamp reported from the micro
 
 		gettimeofday(&tv, 0);
 		printf("s0x%lx u0x%lx i%d l%d\n",
