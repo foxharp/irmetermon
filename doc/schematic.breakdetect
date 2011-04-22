@@ -2,6 +2,16 @@
 
     Simple IR pulse detector
 
+    In a controlled environment, this works nicely, and is
+    incredibly simple.  It involves one phototransistor, one
+    resistor, optional capacitors, and a spare serial port
+    on your computer.  The code to access such a setup is
+    in host/read_ir_breakdetect.c.  The downside is that
+    changes in ambient light wreak havoc on the reading,
+    and I couldn't get it to work reliably under different
+    sunlight levels.  It would probably work okay if the
+    electric meter were hooded, or in a dark room.
+
 
 
                  +---------------------o  DTR (pin 4)  (held at
