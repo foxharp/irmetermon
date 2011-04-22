@@ -63,7 +63,9 @@ void init_adc(void)
 #endif
 
 	// ADC0, Avcc, 8-bit results, channel 11
-	ADMUX |= bit(REFS0) | bit(ADLAR) | bit(MUX1) | bit(MUX0);
+	//  ADMUX |= bit(REFS0) | bit(ADLAR) | bit(MUX1) | bit(MUX0);
+	// ADC0, Avcc, channel 11
+	ADMUX |= bit(REFS0) | bit(MUX1) | bit(MUX0);
 	ADCSRB |= bit(MUX5);
 
 	DIDR0 |= bit(ADC0D);		// disable ADC0 (PF0) digital input
@@ -78,8 +80,11 @@ int filtered;
 
 ISR(ADC_vect)
 {
+	unsigned int adcresult;
 	adc_counter++;
-	tracker(ADCH);
+	adcresult = ADCL;
+	adcresult |= ADCH << 8;
+	tracker(adcresult);
 	ADCSRA |= bit(ADSC);		// next conversion
 }
 
