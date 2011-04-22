@@ -341,16 +341,17 @@ void loop(void)
 
 	while (1) {
 		r = scanf(" s0x%lx u0x%lx i%d l%d", &s, &u, &i, &l);
-		if (r != 4) {
+		if (r != 4 && r != 2) {
 			fprintf(stderr, "Short or failed read from pipe, quitting\n");
 			exit(1);
 		}
 
-		if (i != l + 1) {
-			fprintf(stderr, "Reported pulse index mismatch %d and %d\n", i,
-					l);
+		if (r == 4) {
+			if (i != l + 1) {
+				fprintf(stderr,
+						"Reported pulse index mismatch %d and %d\n", i, l);
+			}
 		}
-
 
 		wh_tick->tv_sec = (time_t) s;
 		wh_tick->tv_usec = (suseconds_t) u;
