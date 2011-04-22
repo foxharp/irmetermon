@@ -62,13 +62,11 @@ void init_adc(void)
 	ADCSRA |= bit(ADPS1) | bit(ADPS0);	// 1Mhz/8 --> 125khz
 #endif
 
-	// ADC0, Avcc, 8-bit results, channel 11
-	//  ADMUX |= bit(REFS0) | bit(ADLAR) | bit(MUX1) | bit(MUX0);
-	// ADC0, Avcc, channel 11
+	// use channel 11 (ADC11), and use Avcc as the reference.
 	ADMUX |= bit(REFS0) | bit(MUX1) | bit(MUX0);
 	ADCSRB |= bit(MUX5);
 
-	DIDR0 |= bit(ADC0D);		// disable ADC0 (PF0) digital input
+	DIDR0 |= bit(ADC11D);		// disable channel 11 digital input
 
 	ADCSRA |= bit(ADEN);		// enable
 	ADCSRA |= bit(ADIE);		// enable Interrupt
