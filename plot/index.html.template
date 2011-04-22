@@ -1,0 +1,23 @@
+<HTML>
+<HEAD>
+<TITLE>foxharper power use</TITLE>
+<META HTTP-EQUIV="Expires" CONTENT="DATETIME">
+<META HTTP-EQUIV="REFRESH" CONTENT="60; URL=power.html">
+</HEAD>
+<BODY BGCOLOR="98D470" TEXT="000000"> 
+
+<!--
+<P>
+These graphs were created NOW (updated every minute).
+-->
+<P>
+<IMG SRC="12hr_power.WHICH.png">
+<P>
+<IMG SRC="36hr_power.WHICH.png">
+<P>
+<IMG SRC="week_power.WHICH.png">
+<P>
+<IMG SRC="2hr_power.WHICH.png">
+<P>
+</BODY>
+</HTML>

@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# the script is expected to live in the same directory
+# as some of its datafiles
+cd $(dirname $0)
+
+# the power logs live in subdirectories here.  the "watts_now" file does too.
+LOGS=/var/local/power
+
+# put temporary files here, before copying them to be web-accessible.
+TMP=/tmp/power
+mkdir -p $TMP
+
+# since this will often run in the background, e.g., from cron, keep
+# a log, and a copy of stderr, for when things go wrong.
+# keep a copy of 
+exec 2>$TMP/power.stderr
+set -x  # turn on tracing
+
+# knowing who ran the script can help debug permission issues.
+id >&2
+
+# need at most two days worth of by-minute logs for the 36 hour plot
+minutelogs=$(ls $LOGS/wH-by-minute/watt-hours*day.log | tail -2 )
+# need at most seven days worth of by-ten-minute logs for the weeklong plot
+tenminutelogs=$(ls $LOGS/wH-by-ten-minute/watt-hours*day.log | tail -7 )
+
+
+# make the plot names unique, which helps avoid browser caching issues,
+which=$$
+
+
+# gnuplot won't modify its plot based on command-line arguments,
+# but it can use environment variables if you insert "`echo
+# $MYVARIALE`" into the plot script.  so set variables to
+# parameterize the individual plots.
+
+cat $minutelogs | tail -$(( 2 * 60)) >$TMP/2hr_wH	# data for this plot
+rm -f $TMP/2hr_power.*.png				# clean up old plot(s)
+PLOT_TITLE="Last 2 hours"			\
+PLOT_DATAFILE=$TMP/2hr_wH			\
+PLOT_OUTPUT=$TMP/2hr_power.$which.png	\
+PLOT_wH_MINUTES=1				\
+PLOT_MAX_wH=5000				\
+PLOT_WITHSTYLE="with impulses"		\
+PLOT_XTIC_SECONDS=1800			\
+PLOT_MINOR_XTICS=6				\
+    gnuplot power.plot
+
+cat $minutelogs | tail -$((12 * 60)) >$TMP/12hr_wH
+rm -f $TMP/12hr_power.*.png
+PLOT_TITLE="Last 12 hours"			\
+PLOT_DATAFILE=$TMP/12hr_wH			\
+PLOT_OUTPUT=$TMP/12hr_power.$which.png	\
+PLOT_wH_MINUTES=1				\
+PLOT_MAX_wH=5000				\
+PLOT_WITHSTYLE="with lines"			\
+PLOT_XTIC_SECONDS=3600			\
+PLOT_MINOR_XTICS=6				\
+    gnuplot power.plot
+
+cat $minutelogs | tail -$((36 * 60)) >$TMP/36hr_wH
+rm -f $TMP/36hr_power.*.png
+PLOT_TITLE="Last 36 hours"			\
+PLOT_DATAFILE=$TMP/36hr_wH			\
+PLOT_OUTPUT=$TMP/36hr_power.$which.png	\
+PLOT_wH_MINUTES=1				\
+PLOT_MAX_wH=5000				\
+PLOT_WITHSTYLE="with lines"			\
+PLOT_XTIC_SECONDS=14400			\
+PLOT_MINOR_XTICS=6				\
+    gnuplot power.plot
+
+cat $tenminutelogs >$TMP/week_wH
+rm -f $TMP/week_power.*.png
+PLOT_TITLE="Last 7 days"	\
+PLOT_DATAFILE=$TMP/week_wH \
+PLOT_OUTPUT=$TMP/week_power.$which.png \
+PLOT_wH_MINUTES=10 \
+PLOT_MAX_wH=5000 \
+PLOT_WITHSTYLE="with steps" \
+PLOT_XTIC_SECONDS=43200	\
+PLOT_MINOR_XTICS=6	\
+    gnuplot power.plot
+
+
+# create index.html from template
+fix_index()
+{
+    sed -e "s/DATETIME/$(date +'%a, %d %b %Y %H:%M:%S %Z')/" \
+	-e "s/WHICH/$which/g" \
+	-e "s/NOW/$(echo $(date +'%A %m\/%d at %H:%M'))/"
+}
+
+fix_index <index.html.template >$TMP/index.html
+
+
+# copy to remote webserver, using ssh
+if true
+then
+    sshhost=mywebserver
+    sshport=22
+    sshuser=mywebserverusername
+    webdir=/var/web/home/power	# path on remote host
+    ssh -x -p $sshport -q $sshuser@$sshhost "rm $webdir/*power.*.png"
+    scp -P $sshport -q $TMP/*power.$which.png $sshuser@$sshhost:$webdir
+    scp -P $sshport -q $TMP/index.html $sshuser@$sshhost:$webdir/power.html
+    scp -P $sshport -q $TMP/watts_now.html $sshuser@$sshhost:$webdir
+fi
+
+# copy locally
+if true
+then
+    WEB=/var/www/serviceberry/html/power
+    rm $WEB/*power.*.png
+    cp $TMP/*power.$which.png $WEB
+    cp $TMP/index.html $WEB
+    cp $TMP/watts_now.html $WEB
+fi
