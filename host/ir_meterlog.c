@@ -352,7 +352,7 @@ void loop(void)
 		}
 
 
-		wh_tick->tv_sec = (time_t) l;
+		wh_tick->tv_sec = (time_t) s;
 		wh_tick->tv_usec = (suseconds_t) u;
 
 		/* one-minute logs */
