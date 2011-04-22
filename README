@@ -1,0 +1,54 @@
+
+IRmetermon
+Paul Fox, April 2011
+
+Many modern electric meters deployed in the US now have 
+wireless connectivity to enable the electric utility to
+read them from a vehicle in the street, rather than requiring
+someone to approach each meter physically.
+
+Whether for testing convenience, or required for calibration
+purposes, these meters also all seem to be equipped with an
+infrared LED that emits one pulse for every watt-hour consumed. 
+(Think of this pulse as the modern equivalent of the spinning
+disk that existed in older meters.)
+
+While in principle one might be able to get access to the meter's
+data via the electric utility's radio interface, a) the equipment
+would be expensive, and b) the data stream is likely (hopefully!)
+encrypted.  It's far, far, easier to simply watch for pulses of
+the little IR led.  This project does just that.
+
+I've played with two circuits for detecting the IR pulses using
+an IR phototransistor.  The schematics appear in the doc subdirectory.
+
+One circuit, which interfaces directly to a serial port, is quite
+simple, and the software to gather the input pulses equally
+trivial -- it looks for ANSI "break" conditions on the serial
+port, which will occur once per pulse.  Unfortunately, I wasn't
+able to make that trivial circuit work across varying ambient
+light levels.  I'd be pleased if someone could make this scheme
+work -- the absence of a microcontroller makes this method much
+simpler, and therefore more available to more people.
+
+The other (more successful) circuit uses an Atmel AVR micro to
+monitor the phototransistor's output, and runs edge detection in
+software to detect the pulses.  This makes it easy to ignore
+changes in ambient light.  Again, a serial interface is used,
+though in this case actual ASCII messages carry information about
+the the pulses.
+
+The host side software in either case logs the number of
+pulses (each representing a watt-hour consumed) per minute.  Charting
+software (using gnuplot) makes those results visible on a webpage.
+The host s/w is split in two:  read_ir.c (or read_ir_breakdetect.c for
+the simpler circuit) reads data from the serial port, timestamps
+it, and forwards it across a pipe to ir_meterlog.c, which does the
+logging.  Daily logs are kept on both a 1 minute and 10 minute basis.
+(Disk is cheap, and while 1 minutes logs are very interesting on
+a daily basis, it probably makes more sense to keep 10 minute logs
+long-term.) In addition, a simple file is continuously maintained
+which records the current 15-second averaged power consumption.
+
+
+
