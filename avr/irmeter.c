@@ -17,8 +17,8 @@
 #include "timer.h"
 
 
-#define STEP_SIZE	10 // adc steps
-#define PULSE_LEN	10 // milliseconds
+#define STEP_SIZE	10			// adc steps
+#define PULSE_LEN	10			// milliseconds
 
 void tracker(int new);
 
@@ -58,7 +58,7 @@ void init_adc(void)
 	// 16Mhz/128 --> 125khz, measured out at 6750 samples/sec
 	ADCSRA |= bit(ADPS2) | bit(ADPS1) | bit(ADPS0);
 #elif defined(IRMETER_ATTINY44)
-     // ADCSRA |= bit(ADPS1);			// 1Mhz/4 --> 250khz
+	// ADCSRA |= bit(ADPS1);           // 1Mhz/4 --> 250khz
 	ADCSRA |= bit(ADPS1) | bit(ADPS0);	// 1Mhz/8 --> 125khz
 #endif
 
@@ -160,8 +160,8 @@ int avgfilter(int val)
 #define NAVG	3
 
 	vals[i % NAVG] = val;
-//	if (i++ < NAVG)
-//		return val;
+//  if (i++ < NAVG)
+//      return val;
 	i++;
 	return (vals[0] + vals[1] + vals[2]) / NAVG;
 
@@ -186,7 +186,7 @@ int median5(void)
 			}
 		}
 	}
-	return svals[K/2];
+	return svals[K / 2];
 }
 
 int medianfilter5(int val)
@@ -194,7 +194,8 @@ int medianfilter5(int val)
 	static unsigned char i;
 
 	vals[i] = val;
-	if (++i == 5) i = 0;
+	if (++i == 5)
+		i = 0;
 	return median5();
 }
 
@@ -221,7 +222,8 @@ int medianfilter3(int val)
 	static unsigned char i;
 
 	vals[i] = val;
-	if (++i == 3) i = 0;
+	if (++i == 3)
+		i = 0;
 	return median3();
 }
 
@@ -256,7 +258,7 @@ void tracker(int new)
 	if (adc_fastdump) {
 		puthex(new);
 		sputchar(' ');
-		sputchar("0123456789abcdef"[now&0xf]); /* last digit of time */
+		sputchar("0123456789abcdef"[now & 0xf]);	/* last digit of time */
 	}
 
 	if (use_median == 5)
@@ -281,8 +283,7 @@ void tracker(int new)
 	} else {
 		if (!up && delta > step_size) {
 			up = now;
-		} else if (up && about_time(up, now) &&
-				delta < -(step_size/2)) {
+		} else if (up && about_time(up, now) && delta < -(step_size / 2)) {
 			up = 0;
 			// don't report until adc and averages have settled.
 			if (now > 100)
