@@ -54,8 +54,7 @@ void usage(char *me)
 	fprintf(stderr,
 			"usage: '%s tty-name', or\n"
 			" '%s -' to get nulls from stdin, but use\n"
-			" '%s /dev/tty' if testing interactively from a terminal\n",
-			me, me, me);
+			" '%s /dev/tty' if testing interactively\n", me, me, me);
 	exit(1);
 }
 
