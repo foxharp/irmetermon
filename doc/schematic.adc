@@ -1,0 +1,48 @@
+
+
+    IR pulse detector, using A/D converter on AVR micro
+
+    The output of the phototransistor is connected directly to an
+    A/D converter on the AVR micro.
+    By detecting the IR pulses in software, it's fairly
+    easy to make the detection immune to large changes in
+    the ambient light level.
+    The code to access this setup is
+    in host/read_ir.c.  Using this circuit, and the code
+    in the avr subdirectory, I get reliable pulses in all
+    but direct sunlight.  simply shading the top of the
+    electric meter's glass cover fixes this.
+
+
+                 +---------------------o  Vcc (+5)
+                 |       |
+      IR        /       === C
+     ---->    |/         | (opt)
+     ---->    |   Q1     +-------------o  GND
+     ---->    |v
+                \
+                 |
+                 +---------------------o  A/D input
+                 |
+                 /
+                 \ R1
+                 /
+                 |
+                 +---------------------o  GND
+
+
+
+    Theory:
+        R1 holds the A/D input low, until IR light hits phototransistor Q1.
+	    As Q1 conducts, and eventually saturates, the voltage at
+	    the A/D increases.
+
+    Parts:
+        Q1 is a phototransistor, similar to:
+                    Fairchild QSE113
+                    Fairchild QSE122
+
+        R1 is 20K (that's what I'm using, but it could probably be bigger)
+
+        C would be a .1uF bypass cap
+
