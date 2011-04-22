@@ -246,7 +246,7 @@ void tracker(int new)
 	static int old;
 	static time_t up;
 	time_t now;
-	char delta;
+	int delta;
 
 	if (!step_size)
 		step_size = STEP_SIZE;
