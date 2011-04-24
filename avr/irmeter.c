@@ -67,13 +67,13 @@ void init_adc(void)
 #endif
 
 #ifdef IRMETER_ADAFRUITU4
-	// use channel 11 (ADC11), and use Avcc as the reference.
-	ADMUX |= bit(REFS0) | bit(MUX1) | bit(MUX0);
+	// use channel 11 (ADC11), 8-bit results, and use Avcc as the reference.
+	ADMUX |= bit(REFS0) | bit(ADLAR) | bit(MUX1) | bit(MUX0);
 	ADCSRB |= bit(MUX5);
 	DIDR0 |= bit(ADC11D);		// disable channel 11 digital input
 #else
 	// use channel 3 (ADC3), and use Avcc as the reference.
-	ADMUX |= bit(REFS0) | bit(MUX1) | bit(MUX0);
+	ADMUX |= bit(REFS0) | bit(ADLAR) | bit(MUX1) | bit(MUX0);
 	DIDR0 |= bit(ADC3D);		// disable channel 11 digital input
 #endif
 
@@ -87,11 +87,8 @@ int filtered;
 
 ISR(ADC_vect)
 {
-	unsigned int adcresult;
 	adc_counter++;
-	adcresult = ADCL;
-	adcresult |= ADCH << 8;
-	tracker(adcresult);
+	tracker(ADCH);
 	ADCSRA |= bit(ADSC);		// next conversion
 }
 
