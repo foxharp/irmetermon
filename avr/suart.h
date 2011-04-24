@@ -32,7 +32,19 @@
 # define STIFR	TIFR1
 # define STIMSK	TIMSK1
 
+#elif defined(_AVR_IOTN13_H_)
+#warning code wont work on attiny13 -- suart.c and timer.c want the same timer right now
+# define SRX     PB0			// ICP on Mega8
+# define SRXPIN  PINB
+
+# define STX     PB1			// OC1A on Mega8
+# define STXDDR  DDRB
+
+# define STIFR	TIFR1
+# define STIMSK	TIMSK1
+
 #elif defined(_AVR_IOTN2313_H_)
+#warning:  suart.c works on a 2313, but not irmetermon -- no ADC
 # define SRX     PD0			// ICP on Mega8
 # define SRXPIN  PIND
 
