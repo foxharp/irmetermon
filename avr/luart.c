@@ -60,19 +60,19 @@
  * the first CDC interface, which sends strings to the host for
  * each joystick movement.
  */
-USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface = {
+USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
 	.Config = {
 			   .ControlInterfaceNumber = 0,
 
-			   .DataINEndpointNumber = CDC1_TX_EPNUM,
+			   .DataINEndpointNumber = CDC_TX_EPNUM,
 			   .DataINEndpointSize = CDC_TXRX_EPSIZE,
 			   .DataINEndpointDoubleBank = false,
 
-			   .DataOUTEndpointNumber = CDC1_RX_EPNUM,
+			   .DataOUTEndpointNumber = CDC_RX_EPNUM,
 			   .DataOUTEndpointSize = CDC_TXRX_EPSIZE,
 			   .DataOUTEndpointDoubleBank = false,
 
-			   .NotificationEndpointNumber = CDC1_NOTIFICATION_EPNUM,
+			   .NotificationEndpointNumber = CDC_NOTIFICATION_EPNUM,
 			   .NotificationEndpointSize = CDC_NOTIFICATION_EPSIZE,
 			   .NotificationEndpointDoubleBank = false,
 			   }
@@ -86,26 +86,6 @@ USB_ClassInfo_CDC_Device_t VirtualSerial1_CDC_Interface = {
  * the second CDC interface, which echos back all received data
  * from the host.
  */
-#if DUAL
-USB_ClassInfo_CDC_Device_t VirtualSerial2_CDC_Interface = {
-	.Config = {
-			   .ControlInterfaceNumber = 2,
-
-			   .DataINEndpointNumber = CDC2_TX_EPNUM,
-			   .DataINEndpointSize = CDC_TXRX_EPSIZE,
-			   .DataINEndpointDoubleBank = false,
-
-			   .DataOUTEndpointNumber = CDC2_RX_EPNUM,
-			   .DataOUTEndpointSize = CDC_TXRX_EPSIZE,
-			   .DataOUTEndpointDoubleBank = false,
-
-			   .NotificationEndpointNumber = CDC2_NOTIFICATION_EPNUM,
-			   .NotificationEndpointSize = CDC_NOTIFICATION_EPSIZE,
-			   .NotificationEndpointDoubleBank = false,
-			   }
-	,
-};
-#endif
 
 
 /** Event handler for the library USB Configuration Changed event. */
@@ -114,11 +94,7 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 	bool ConfigSuccess = true;
 
 	ConfigSuccess &=
-		CDC_Device_ConfigureEndpoints(&VirtualSerial1_CDC_Interface);
-#if DUAL
-	ConfigSuccess &=
-		CDC_Device_ConfigureEndpoints(&VirtualSerial2_CDC_Interface);
-#endif
+		CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
 
 	// LEDs_SetAllLEDs(ConfigSuccess ? LEDMASK_USB_READY : LEDMASK_USB_ERROR);
 }
@@ -126,10 +102,7 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 /** Event handler for the library USB Control Request reception event. */
 void EVENT_USB_Device_ControlRequest(void)
 {
-	CDC_Device_ProcessControlRequest(&VirtualSerial1_CDC_Interface);
-#if DUAL
-	CDC_Device_ProcessControlRequest(&VirtualSerial2_CDC_Interface);
-#endif
+	CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
 }
 
 
@@ -143,7 +116,7 @@ uint8_t sgetchar(void)
 
 int kbhit(void)
 {
-	hit_c = CDC_Device_ReceiveByte(&VirtualSerial1_CDC_Interface);
+	hit_c = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
 	return hit_c >= 0;
 }
 
@@ -154,7 +127,7 @@ void sputchar(char c)
 
 	if (c == '\n')
 		sputchar('\r');
-	ret = CDC_Device_SendByte(&VirtualSerial1_CDC_Interface, (uint8_t) c);
+	ret = CDC_Device_SendByte(&VirtualSerial_CDC_Interface, (uint8_t) c);
 	if (ret != ENDPOINT_READYWAIT_NoError)
 		longjmp(restartbuf, 1);
 }
@@ -181,22 +154,12 @@ void luart_init(void)
 
 void luart_deinit(void)
 {
-	USB_ShutDown();
+	// USB_ShutDown();
 }
 
 void luart_run(void)
 {
-	CDC_Device_USBTask(&VirtualSerial1_CDC_Interface);
-
-#if DUAL						// simple echo on the second interface
-	int16_t ReceivedByte =
-		CDC_Device_ReceiveByte(&VirtualSerial2_CDC_Interface);
-	if (!(ReceivedByte < 0)) {
-		CDC_Device_SendByte(&VirtualSerial2_CDC_Interface,
-							(uint8_t) ReceivedByte);
-	}
-	CDC_Device_USBTask(&VirtualSerial2_CDC_Interface);
-#endif
+	CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
 
 	USB_USBTask();
 }

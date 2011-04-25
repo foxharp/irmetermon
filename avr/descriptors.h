@@ -1,13 +1,13 @@
 /*
              LUFA Library
-     Copyright (C) Dean Camera, 2010.
+     Copyright (C) Dean Camera, 2011.
 
   dean [at] fourwalledcubicle [dot] com
            www.lufa-lib.org
 */
 
 /*
-  Copyright 2010  Dean Camera (dean [at] fourwalledcubicle [dot] com)
+  Copyright 2011  Dean Camera (dean [at] fourwalledcubicle [dot] com)
 
   Permission to use, copy, modify, distribute, and sell this
   software and its documentation for any purpose is hereby granted
@@ -42,27 +42,16 @@
 #include <LUFA/Drivers/USB/USB.h>
 
 	/* Macros: */
-		/** Endpoint number of the first CDC interface's device-to-host notification IN endpoint. */
-#define CDC1_NOTIFICATION_EPNUM        3
+		/** Endpoint number of the CDC device-to-host notification IN endpoint. */
+#define CDC_NOTIFICATION_EPNUM         2
 
-		/** Endpoint number of the first CDC interface's device-to-host data IN endpoint. */
-#define CDC1_TX_EPNUM                  1
+		/** Endpoint number of the CDC device-to-host data IN endpoint. */
+#define CDC_TX_EPNUM                   3
 
-		/** Endpoint number of the first CDC interface's host-to-device data OUT endpoint. */
-#define CDC1_RX_EPNUM                  2
+		/** Endpoint number of the CDC host-to-device data OUT endpoint. */
+#define CDC_RX_EPNUM                   4
 
-#if DUAL
-		/** Endpoint number of the second CDC interface's device-to-host notification IN endpoint. */
-#define CDC2_NOTIFICATION_EPNUM        4
-
-		/** Endpoint number of the second CDC interface's device-to-host data IN endpoint. */
-#define CDC2_TX_EPNUM                  5
-
-		/** Endpoint number of the second CDC interface's host-to-device data OUT endpoint. */
-#define CDC2_RX_EPNUM                  6
-#endif
-
-		/** Size in bytes of the CDC device-to-host notification IN endpoints. */
+		/** Size in bytes of the CDC device-to-host notification IN endpoint. */
 #define CDC_NOTIFICATION_EPSIZE        8
 
 		/** Size in bytes of the CDC data IN and OUT endpoints. */
@@ -75,24 +64,14 @@
 		 */
 typedef struct {
 	USB_Descriptor_Configuration_Header_t Config;
-	USB_Descriptor_Interface_Association_t CDC1_IAD;
-	USB_Descriptor_Interface_t CDC1_CCI_Interface;
-	USB_CDC_Descriptor_FunctionalHeader_t CDC1_Functional_Header;
-	USB_CDC_Descriptor_FunctionalACM_t CDC1_Functional_ACM;
-	USB_CDC_Descriptor_FunctionalUnion_t CDC1_Functional_Union;
-	USB_Descriptor_Endpoint_t CDC1_ManagementEndpoint;
-	USB_Descriptor_Interface_t CDC1_DCI_Interface;
-	USB_Descriptor_Endpoint_t CDC1_DataOutEndpoint;
-	USB_Descriptor_Endpoint_t CDC1_DataInEndpoint;
-	USB_Descriptor_Interface_Association_t CDC2_IAD;
-	USB_Descriptor_Interface_t CDC2_CCI_Interface;
-	USB_CDC_Descriptor_FunctionalHeader_t CDC2_Functional_Header;
-	USB_CDC_Descriptor_FunctionalACM_t CDC2_Functional_ACM;
-	USB_CDC_Descriptor_FunctionalUnion_t CDC2_Functional_Union;
-	USB_Descriptor_Endpoint_t CDC2_ManagementEndpoint;
-	USB_Descriptor_Interface_t CDC2_DCI_Interface;
-	USB_Descriptor_Endpoint_t CDC2_DataOutEndpoint;
-	USB_Descriptor_Endpoint_t CDC2_DataInEndpoint;
+	USB_Descriptor_Interface_t CDC_CCI_Interface;
+	USB_CDC_Descriptor_FunctionalHeader_t CDC_Functional_Header;
+	USB_CDC_Descriptor_FunctionalACM_t CDC_Functional_ACM;
+	USB_CDC_Descriptor_FunctionalUnion_t CDC_Functional_Union;
+	USB_Descriptor_Endpoint_t CDC_NotificationEndpoint;
+	USB_Descriptor_Interface_t CDC_DCI_Interface;
+	USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
+	USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
 } USB_Descriptor_Configuration_t;
 
 	/* Function Prototypes: */
