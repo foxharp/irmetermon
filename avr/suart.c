@@ -19,9 +19,12 @@
 #include "common.h"
 #include "suart.h"
 
+#define TX_INVERT 0
+#define RX_INVERT 0
+
 #define bit(x) _BV(x)
 
-#define BIT_TIME	(unsigned int)((XTAL + BAUD/2) / BAUD)
+#define BIT_TIME	(unsigned int)((F_CPU + BAUD/2) / BAUD)
 
 
 volatile unsigned char stx_count;
@@ -37,17 +40,23 @@ unsigned char srx_tmp;
 
 void suart_init(void)
 {
-	// suart.c uses the 16 bit timer.  that could change, if XTAL is
+	// suart.c uses the 16 bit timer.  that could change, if F_CPU is
 	// slow enough to allow bit rates to be timed in 8 bits.  but the
 	// overhead of the clock interrupt is very low, so we'll just use
 	// the set 8-bit timer0
 	OCR1A = TCNT1 + 1;			// force first compare
 	TCCR1A = bit(COM1A1) | bit(COM1A0);	// set OC1A high, T1 mode 0
-	STIMSK = bit(OCIE1A);		// enable tx
-#ifndef NO_RECEIVE
-	TCCR1B = bit(ICNC1) | bit(CS10);	// noise canceler, 1>0 transition,
+#if RX_INVERT
+	// noise canceller, 0>1 transition,
+	TCCR1B = bit(ICNC1) | bit(CS10) | bit(ICES1);
+#else
+	// noise canceller, 1>0 transition,
+	TCCR1B = bit(ICNC1) | bit(CS10);
+#endif
 	// CLK/1, T1 mode 0
 	STIFR = bit(ICF1);			// clear pending interrupt
+	STIMSK = bit(OCIE1A);		// enable tx
+#ifndef NO_RECEIVE
 	STIMSK |= bit(ICIE1);		// enable rx and wait for start
 
 	srx_done = 0;				// nothing received
@@ -68,12 +77,18 @@ unsigned char sgetchar(void)	// get byte
 
 SIGNAL(SIG_INPUT_CAPTURE1)		// rx start
 {
-	OCR1B = ICR1 + (unsigned int) (BIT_TIME * 1.5);	// scan 1.5 bits after start
+	// scan 1.5 bits after start
+	OCR1B = ICR1 + (unsigned int) (3 * BIT_TIME / 2);
+
 	srx_tmp = 0;				// clear bit storage
 	srx_mask = 1;				// bit mask
 	STIFR = bit(OCF1B);			// clear pending interrupt
+#if RX_INVERT
+	if (SRXPIN & bit(SRX))		// still high
+#else
 	if (!(SRXPIN & bit(SRX)))	// still low
-		STIMSK = bit(OCIE1A) | bit(OCIE1B);	// wait for first bit
+#endif
+		STIMSK = bit(OCIE1B);	// wait for first bit
 }
 
 
@@ -82,10 +97,14 @@ SIGNAL(SIG_OUTPUT_COMPARE1B)
 	unsigned char in = SRXPIN;	// scan rx line
 
 	if (srx_mask) {
+		OCR1B += BIT_TIME;		// next bit slice
+#if RX_INVERT
+		if (!(in & 1 << SRX))
+#else
 		if (in & bit(SRX))
+#endif
 			srx_tmp |= srx_mask;
 		srx_mask <<= 1;
-		OCR1B += BIT_TIME;		// next bit slice
 	} else {
 		srx_done = 1;			// mark rx data valid
 		srx_data = srx_tmp;		// store rx data
@@ -122,6 +141,7 @@ void sputstring_p(const prog_char * s)
 }
 
 
+
 SIGNAL(SIG_OUTPUT_COMPARE1A)	// tx bit
 {
 	unsigned char dout;
@@ -132,10 +152,18 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)	// tx bit
 
 	if (count) {
 		stx_count = --count;	// count down
-		dout = bit(COM1A1);		// set low on next compare
+#if TX_INVERT
+		dout = 1 << COM1A1 ^ 1 << COM1A0;	// set high on next compare
+#else
+		dout = 1 << COM1A1;		// set low on next compare
+#endif
 		if (count != 9) {		// no start bit
 			if (!(stx_data & 1))	// test inverted data
-				dout = bit(COM1A1) | bit(COM1A0);	// set high on next compare
+#if TX_INVERT
+				dout = 1 << COM1A1;	// set low on next compare
+#else
+				dout = 1 << COM1A1 ^ 1 << COM1A0;	// set high on next compare
+#endif
 			stx_data >>= 1;		// shift zero in from left
 		}
 		TCCR1A = dout;
