@@ -252,11 +252,27 @@ void monitor(void)
 
 	c = sgetchar();
 
+#if TEST_RX
+	puthex(c);
+	sputchar(',');
+	sputchar(' ');
+	return;
+#endif
+
 
 	switch (c) {
 	case 'v':
 		sputstring(BANNER);
 		break;
+
+	case 'a':
+		adc_fastdump = 1;
+		break;
+
+	case 'q':
+		adc_fastdump = 0;
+		break;
+
 
 	case 'x':
 		for (i = 0; i < 20; i++)
@@ -269,14 +285,14 @@ void monitor(void)
 		sputchar('\n');
 		break;
 
-	case 'e':
-		wdt_enable(WDTO_250MS);
-		for (;;);
+	case 's':
+		for (i = 0; i < (80 * 20); i++)
+			sputchar("0123456789abcdef"[(get_ms_timer() / 1000) & 0xf]);	/* last digit of time */
+		sputchar('\n');
 		break;
 
-	case 'b':					// for reset -- PB1 jumpered to RST
-		DDRB = bit(PB1);
-		PORTB &= ~bit(PB1);
+	case 'e':
+		wdt_enable(WDTO_250MS);
 		for (;;);
 		break;
 
