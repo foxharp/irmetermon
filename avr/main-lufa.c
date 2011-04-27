@@ -49,6 +49,7 @@ int main(void)
 		luart_run();
 		monitor();
 		led_handle();
+		tracker();
 	}
 
 }

@@ -40,6 +40,7 @@ int main()
 
 		monitor();
 		led_handle();
+		tracker();
 	}
 
 }

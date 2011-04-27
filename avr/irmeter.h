@@ -10,6 +10,8 @@ void irmeter_hwinit(void);
 void led_handle(void);
 void led_flash(void);
 void show_adc(void);
+void tracker(void);
+
 
 extern char adc_fastdump;
 extern char use_median;

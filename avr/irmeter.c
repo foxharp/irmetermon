@@ -20,8 +20,6 @@
 #define STEP_SIZE	10			// adc steps
 #define PULSE_LEN	10			// milliseconds
 
-void tracker(int new);
-
 time_t led_time;
 
 #ifdef IRMETER_ADAFRUITU4
@@ -85,10 +83,13 @@ void init_adc(void)
 unsigned int adc_counter;
 int filtered;
 
+unsigned char new_adc, adc_avail;
+
 ISR(ADC_vect)
 {
 	adc_counter++;
-	tracker(ADCH);
+	new_adc = ADCH;
+	adc_avail = 1;
 	ADCSRA |= bit(ADSC);		// next conversion
 }
 
@@ -252,15 +253,19 @@ char use_median;
 char up_only;
 char step_size;
 
-void tracker(int new)
+void tracker(void)
 {
 	static int old;
 	static time_t up;
 	time_t now;
 	int delta;
+	int new;
 
-	if (!step_size)
-		step_size = STEP_SIZE;
+	if (!adc_avail)
+		return;
+
+	new = new_adc;
+	adc_avail = 0;
 
 	now = get_ms_timer();
 
@@ -306,8 +311,11 @@ void tracker(int new)
 
 void irmeter_hwinit(void)
 {
+	use_median = 5;
+	step_size = STEP_SIZE;
+
 	init_adc();
 	init_timer();
 	init_led();
-	use_median = 5;
+
 }
