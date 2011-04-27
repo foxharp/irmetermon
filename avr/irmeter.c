@@ -31,9 +31,9 @@ time_t led_time;
 # define BITLED PB4
 # define DDRLED DDRB
 #elif defined(IRMETER_ATTINY44)
-# define PORTLED PORTB
-# define BITLED PB2
-# define DDRLED DDRB
+# define PORTLED PORTA
+# define BITLED PA0
+# define DDRLED DDRA
 #endif
 
 void init_led(void)
