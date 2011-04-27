@@ -6,10 +6,11 @@ VERSION = $(shell date +%y%m%d-%H%M)
 
 # MCU = attiny2313
 MCU = attiny44
+F_CPU = 1000000
 OURDEFS = -DUSE_SUART -DIRMETERMON_VERSION="\"$(VERSION)\""
 OURDEFS += -DIRMETER_ATTINY44
-// OURDEFS += -DMINIMAL_MONITOR
-OURDEFS += -DMONITOR
+OURDEFS += -DMINIMAL_MONITOR
+// OURDEFS += -DMONITOR
 
 # location of cross-compiler -- edit to suit
 #CROSS = /opt/avr-gcc-070314/bin/avr-
@@ -23,6 +24,7 @@ OBJCOPY = $(CROSS)objcopy
 OBJDUMP = $(CROSS)objdump
 
 CFLAGS = -c -Os -Wwrite-strings -Wall -mmcu=$(MCU)
+CFLAGS += -DF_CPU=$(F_CPU)UL
 CFLAGS += -Wa,-adhlns=$(<:%.c=%.lst)
 LFLAGS = -mmcu=$(MCU)
 
@@ -33,12 +35,15 @@ SRCS = main-suart.c irmeter.c suart.c timer.c monitor.c
 OBJS = $(SRCS:%.c=%.o)
 HDRS = suart.h common.h timer.h irmeter.h
 
+
 CFLAGS += $(OURDEFS)
 
 
 all: $(PROG).hex $(PROG).lss
 
-$(PROG).out: $(OBJS)
+$(OBJS): $(HDRS) Makefile.suart
+
+$(PROG).out: $(OBJS) $(HDRS)
 	@-test -f $(PROG).out && (echo size was: ; $(SIZE) $(PROG).out)
 	$(LD) -o $@ $(LFLAGS) $(OBJS)
 	$(NM) -n $@ >$(PROG).map
@@ -75,9 +80,8 @@ tarball: all clean
 	mv ../$(PROG)-$(VERSION).tar.gz .
 	rm -f ../$(PROG)-$(VERSION)
 
-foo.out: foo.o
-	$(LD) -o $@ $(LFLAGS) foo.o
-	$(NM) -n $@ >foo.map
+program:
+	sudo avrdude -c usbtiny -p t44 -U $(PROG).hex
 
 clean:
 	rm -f *.o *.flash *.flash.* *.out *.map *.lst *.lss *.hex *.eep *.cof *.elf *.sym

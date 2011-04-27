@@ -5,9 +5,14 @@
  * Licensed under GPL version 2, see accompanying LICENSE file
  * for details.
  */
-#define XTAL	16000000		// 1Mhz, default RC oscillator config
+#ifndef F_CPU
+#error F_CPU must be defined
+#endif
 
-#define	BAUD	38400
+// #define  BAUD    38400
+// #define  BAUD    9600
+// #define  BAUD    4800
+#define	BAUD	4800
 
 #define bit(x) _BV(x)
 
