@@ -6,7 +6,7 @@
  * for details.
  */
 
-void irmeter_hwinit(void);
+void irmeter_init(void);
 void led_handle(void);
 void led_flash(void);
 void show_adc(void);

@@ -15,6 +15,7 @@
 #include "suart.h"
 #include "common.h"
 #include "irmeter.h"
+#include "timer.h"
 
 void hardware_setup(void)
 {
@@ -22,12 +23,9 @@ void hardware_setup(void)
 	MCUSR &= ~(1 << WDRF);
 	wdt_disable();
 
-	/* Disable clock division */
-	// clock_prescale_set(clock_div_1);
-
 	suart_init();
-
-	irmeter_hwinit();
+	init_timer();
+	irmeter_init();
 }
 
 int main()

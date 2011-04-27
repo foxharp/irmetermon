@@ -309,13 +309,12 @@ void tracker(void)
 	old = filtered;
 }
 
-void irmeter_hwinit(void)
+void irmeter_init(void)
 {
 	use_median = 5;
 	step_size = STEP_SIZE;
 
 	init_adc();
-	init_timer();
 	init_led();
 
 }

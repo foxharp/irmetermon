@@ -16,6 +16,7 @@
 #include "luart.h"
 #include "common.h"
 #include "irmeter.h"
+#include "timer.h"
 
 jmp_buf restartbuf;
 
@@ -29,8 +30,8 @@ void hardware_setup(void)
 	clock_prescale_set(clock_div_1);
 
 	luart_init();
-
-	irmeter_hwinit();
+	init_timer();
+	irmeter_init();
 }
 
 int main(void)
