@@ -21,8 +21,12 @@ void init_timer(void)
 {
 	// set up for simple overflow operation
 	TCCR0A = bit(WGM01);		// CTC
+#ifdef IRMETER_ADAFRUITU4
 	TCCR0B = bit(CS01) | bit(CS00);	// prescaler is 64 
-	OCR0A = 244;				// see below
+#elif defined(IRMETER_ATTINY44)
+	TCCR0B = bit(CS01);			// prescaler is 8
+#endif
+	OCR0A = 125;				// see below
 	TIMSK0 = bit(OCIE0A);
 
 }
@@ -33,28 +37,28 @@ ISR(TIMER0_COMPA_vect)
 ISR(TIM0_COMPA_vect)
 #endif
 {
-	static unsigned int prescale;
-
 	// xtal == 1024    *   244   *   N
 	//       (prescale)  (overflow)
 	// "244" is chosen so N is close to integral for 1Mhz, 8Mhz, 12Mhz, etc.
-// #define N  (XTAL / (1024UL * 244UL))
-#define N  1
-
-	if ((prescale++ % N) == 0)
+#ifdef IRMETER_ADAFRUITU4
+	static unsigned char prescale;
+	if ((prescale++ & 1) == 0)
 		milliseconds++;
+#elif defined(IRMETER_ATTINY44)
+	milliseconds++;
+#endif
 
 #if 0
 	if (milliseconds % 1000 == 0) {
-		// led_flash();
+		led_flash();
+#if 0
 		extern unsigned int adc_counter;
 		sputstring("adccnt: ");
 		puthex16(adc_counter);
 		sputchar('\n');
+#endif
 	}
 #endif
-
-	TIFR0 = bit(OCF0A);
 }
 
 time_t get_ms_timer(void)
