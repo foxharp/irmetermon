@@ -95,12 +95,12 @@ static unsigned char rcnt;
 
 void save_recent(struct timeval *tv)
 {
-	// leave rcnt pointing at most recent entry
-	// printf("adding sample rcnt %d\n", rcnt);
-	recent[rcnt++ & (NSAMP - 1)] = *tv;
 #if ! USE_ALARM
 	write_watts_now();
 #endif
+	// leave rcnt pointing at most recent entry
+	// printf("adding sample rcnt %d\n", rcnt);
+	recent[rcnt++ & (NSAMP - 1)] = *tv;
 }
 
 double timeval_diff(struct timeval *a, struct timeval *b)
