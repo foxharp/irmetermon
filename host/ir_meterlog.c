@@ -34,7 +34,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <signal.h>
 #include <errno.h>
 #include <time.h>
 #include <sys/time.h>
@@ -44,8 +43,6 @@
 #define LOG_WATTS_NOW_FILE "/tmp/watts_now"
 #define WATTS_MIN_SAMPLES 3		// want at least this many samples to average...
 #define WATTS_MIN_PERIOD 15		// ...over at least this many seconds of data
-
-#define USE_SIGUSR1 0
 
 // #define LOG_KWH_MINUTE_DIR   "/var/local/irmetermon/minute/"
 #define LOG_KWH_MINUTE_DIR	"/tmp/wH-by-minute/"
@@ -63,22 +60,6 @@ void usage(void)
 	fprintf(stderr, "usage: %s (no arguments)\n", me);
 	exit(1);
 }
-
-#if USE_SIGUSR1
-void signal_wrapper(signo, handler)
-int signo;
-void (*handler) ();
-{
-	struct sigaction act, oact;
-
-	act.sa_handler = handler;
-	sigemptyset(&act.sa_mask);
-	act.sa_flags = SA_RESTART;
-
-	(void) sigaction(signo, &act, &oact);
-}
-#endif
-
 
 /*
  * immediate consumption ("watts now") support
@@ -169,16 +150,6 @@ void write_watts_now(void)
 				LOG_WATTS_NOW_FILE);
 	}
 }
-
-#if USE_SIGUSR1
-void sigusr1_handle(int n)
-{
-	write_watts_now();
-	printf("avg delta: %f, watts %d\n",
-		   get_recent_avg_delta(), get_recent_watts());
-}
-#endif
-
 
 /*
  *  logging support
@@ -363,10 +334,6 @@ int main(int argc, char *argv[])
 
 	if (argc > 1)
 		usage();
-
-#if USE_SIGUSR1
-	signal_wrapper(SIGUSR1, sigusr1_handle);
-#endif
 
 	mkdir(LOG_KWH_MINUTE_DIR, 0755);
 	mkdir(LOG_KWH_TEN_MINUTE_DIR, 0755);
