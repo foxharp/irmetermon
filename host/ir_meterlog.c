@@ -42,7 +42,8 @@
 
 // #define LOG_IMMED_DIR "/var/run/irmetermon/watts_now"
 #define LOG_WATTS_NOW_FILE "/tmp/watts_now"
-#define WATTS_NOW_AVG_PERIOD	15	// using this many seconds of data
+#define WATTS_MIN_SAMPLES 3		// want at least this many samples to average...
+#define WATTS_MIN_PERIOD 15		// ...over at least this many seconds of data
 #define USE_ALARM 0
 #if USE_ALARM
 #define WATTS_NOW_UPDATE_PERIOD 7	// update file this often (seconds)
@@ -110,26 +111,30 @@ double timeval_diff(struct timeval *a, struct timeval *b)
 double get_recent_avg_delta(void)
 {
 	int i;
-	struct timeval tv;
-	gettimeofday(&tv, 0);
+	struct timeval nowtv[1], *thentvp;
+	gettimeofday(nowtv, 0);
 	double interval = 0;
 
-	/* count the ticks in our averaging period */
-	for (i = 0; i < rcnt && i < NSAMP; i++) {
-		// printf("interval %d of %d is %f\n", i, rcnt - 1, interval);
-		interval =
-			timeval_diff(&tv, &recent[(rcnt - 1 - i) & (NSAMP - 1)]);
-		if (interval > WATTS_NOW_AVG_PERIOD) {
-			i++;
+	i = 0;
+	while (i < rcnt && i < NSAMP) {
+		thentvp = &recent[(rcnt - 1 - i++) & (NSAMP - 1)];
+		interval = timeval_diff(nowtv, thentvp);
+
+		// stop when we have enough samples, and enough time...
+		if (interval > WATTS_MIN_PERIOD && i >= WATTS_MIN_SAMPLES) {
+			break;
+		}
+		// ...but don't go back too far.
+		if (interval > WATTS_MIN_PERIOD * 4) {
 			break;
 		}
 	}
 
-	if (i <= 1)
+	if (i < 1)
 		return 0;
 
 	// printf("dividing  %f  by (%d - 1)\n", interval, i);
-	return interval / (i - 1);
+	return interval / i;
 }
 
 int get_recent_watts(void)
