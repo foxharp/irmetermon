@@ -44,10 +44,6 @@
 #define LOG_WATTS_NOW_FILE "/tmp/watts_now"
 #define WATTS_MIN_SAMPLES 3		// want at least this many samples to average...
 #define WATTS_MIN_PERIOD 15		// ...over at least this many seconds of data
-#define USE_ALARM 0
-#if USE_ALARM
-#define WATTS_NOW_UPDATE_PERIOD 7	// update file this often (seconds)
-#endif
 
 #define USE_SIGUSR1 0
 
@@ -68,7 +64,7 @@ void usage(void)
 	exit(1);
 }
 
-#if USE_ALARM || USE_SIGUSR1
+#if USE_SIGUSR1
 void signal_wrapper(signo, handler)
 int signo;
 void (*handler) ();
@@ -95,9 +91,7 @@ static unsigned char rcnt;
 
 void save_recent(struct timeval *tv)
 {
-#if ! USE_ALARM
 	write_watts_now();
-#endif
 	// leave rcnt pointing at most recent entry
 	// printf("adding sample rcnt %d\n", rcnt);
 	recent[rcnt++ & (NSAMP - 1)] = *tv;
@@ -174,9 +168,6 @@ void write_watts_now(void)
 		fprintf(stderr, "%s: renaming to %s: %m\n", me,
 				LOG_WATTS_NOW_FILE);
 	}
-#if USE_ALARM
-	alarm(WATTS_NOW_UPDATE_PERIOD);
-#endif
 }
 
 #if USE_SIGUSR1
@@ -185,13 +176,6 @@ void sigusr1_handle(int n)
 	write_watts_now();
 	printf("avg delta: %f, watts %d\n",
 		   get_recent_avg_delta(), get_recent_watts());
-}
-#endif
-
-#if USE_ALARM
-void sigalrm_handle(int n)
-{
-	write_watts_now();
 }
 #endif
 
@@ -382,10 +366,6 @@ int main(int argc, char *argv[])
 
 #if USE_SIGUSR1
 	signal_wrapper(SIGUSR1, sigusr1_handle);
-#endif
-#if USE_ALARM
-	signal_wrapper(SIGALRM, sigalrm_handle);
-	alarm(WATTS_NOW_UPDATE_PERIOD);
 #endif
 
 	mkdir(LOG_KWH_MINUTE_DIR, 0755);
