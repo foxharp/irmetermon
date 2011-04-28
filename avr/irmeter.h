@@ -13,7 +13,7 @@ void show_adc(void);
 void tracker(void);
 
 
-extern char adc_fastdump;
+extern unsigned int adc_fastdump;
 extern char use_median;
 extern char up_only;
 extern char step_size;

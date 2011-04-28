@@ -248,7 +248,7 @@ int about_time(int went_up, int now)
 
 
 
-char adc_fastdump;
+unsigned int adc_fastdump;
 char use_median;
 char up_only;
 char step_size;
@@ -263,6 +263,9 @@ void tracker(void)
 
 	if (!adc_avail)
 		return;
+
+	if (adc_fastdump)
+		adc_fastdump--;
 
 	new = new_adc;
 	adc_avail = 0;

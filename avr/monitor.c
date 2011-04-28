@@ -142,7 +142,7 @@ void monitor(void)
 		break;
 
 	case 'a':
-		adc_fastdump = !adc_fastdump;
+		adc_fastdump = gethex() & 0xfff;
 		break;
 
 	case 'A':
@@ -266,7 +266,7 @@ void monitor(void)
 		break;
 
 	case 'a':
-		adc_fastdump = 1;
+		adc_fastdump = 1000;
 		break;
 
 	case 'q':
