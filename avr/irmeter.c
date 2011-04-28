@@ -26,14 +26,12 @@ time_t led_time;
 # define PORTLED PORTE
 # define BITLED PE6
 # define DDRLED DDRE
-#elif defined(IRMETER_ATTINY13)
-# define PORTLED PORTB
-# define BITLED PB4
-# define DDRLED DDRB
 #elif defined(IRMETER_ATTINY44)
 # define PORTLED PORTA
 # define BITLED PA0
 # define DDRLED DDRA
+#else
+# warning missing ADC configuration
 #endif
 
 void init_led(void)
@@ -55,24 +53,22 @@ void led_flash(void)
 
 void init_adc(void)
 {
-	// prescalar is 128.  that's okay for 16Mhz, but not for 1Mhz
+
 #ifdef IRMETER_ADAFRUITU4
 	// 16Mhz/128 --> 125khz, measured out at 6750 samples/sec
 	ADCSRA |= bit(ADPS2) | bit(ADPS1) | bit(ADPS0);
-#elif defined(IRMETER_ATTINY44)
-	// ADCSRA |= bit(ADPS1);           // 1Mhz/4 --> 250khz
-	ADCSRA |= bit(ADPS1) | bit(ADPS0);	// 1Mhz/8 --> 125khz
-#endif
-
-#ifdef IRMETER_ADAFRUITU4
-	// use channel 11 (ADC11), 8-bit results, and use Avcc as the reference.
+	// channel 11 (ADC11), 8-bit results, and use Avcc as the reference.
 	ADMUX |= bit(REFS0) | bit(ADLAR) | bit(MUX1) | bit(MUX0);
 	ADCSRB |= bit(MUX5);
 	DIDR0 |= bit(ADC11D);		// disable channel 11 digital input
+#elif defined(IRMETER_ATTINY44)
+	// 1Mhz/8 --> 125khz
+	ADCSRA |= bit(ADPS1) | bit(ADPS0);
+	// channel 3 (ADC3), 8-bit results (and Vcc as the reference).
+	ADMUX |= bit(ADLAR) | bit(MUX1) | bit(MUX0);
+	DIDR0 |= bit(ADC3D);		// disable channel 3 digital input
 #else
-	// use channel 3 (ADC3), and use Avcc as the reference.
-	ADMUX |= bit(REFS0) | bit(ADLAR) | bit(MUX1) | bit(MUX0);
-	DIDR0 |= bit(ADC3D);		// disable channel 11 digital input
+#warning missing ADC init code
 #endif
 
 	ADCSRA |= bit(ADEN);		// enable
