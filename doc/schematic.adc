@@ -34,15 +34,14 @@
 
     Theory:
         R1 holds the A/D input low, until IR light hits phototransistor Q1.
-	    As Q1 conducts, and eventually saturates, the voltage at
-	    the A/D increases.
+            As Q1 conducts, and eventually saturates, the voltage at
+            the A/D increases.
 
     Parts:
-        Q1 is a phototransistor, similar to:
-                    Fairchild QSE113
-                    Fairchild QSE122
+        Q1 is a phototransistor.  I'm using a Fairchild QSE113 or QSE114.
 
-        R1 is 20K (that's what I'm using, but it could probably be bigger)
+        R1 is roughly 20K.  (I'm using a variable resistor, and settings
+            from 10K to 50K seem to work.)
 
         C would be a .1uF bypass cap
 
