@@ -19,12 +19,13 @@ encrypted.  It's far, far, easier to simply watch for pulses of
 the little IR led.  This project does just that.
 
 I've played with two circuits for detecting the IR pulses using
-an IR phototransistor.  The schematics appear in the doc
-subdirectory.
+an IR phototransistor.  The simple schematics appear in the doc
+subdirectory (schematic.breakdetect and schematic.adc).  There's
+also a screen grab of a scope trace of the pulse in doc/irpulse.png.
 
 One circuit, which interfaces directly to a serial port, is quite
 simple, and the software to gather the input pulses equally
-trivial -- it looks for ANSI "break" conditions on the serial
+trivial -- the s/w looks for ANSI "break" conditions on the serial
 port, which will occur once per pulse.  Unfortunately, I wasn't
 able to make that trivial circuit work across varying ambient
 light levels.  I'd be pleased if someone could make this scheme
@@ -50,6 +51,15 @@ minute logs are very interesting on a daily basis, it probably
 makes more sense to keep 10 minute logs long-term.) In addition,
 a simple file is continuously maintained which records the
 current 15-second averaged power consumption.
+
+----------
+
+Thanks where thanks is due -- I was inspired to tackle this by
+some earlier investigation into the IR LED by "Dave K", on his
+"Tech Blog":
+  http://davestech.blogspot.com/2008/02/itron-remote-read-electric-meter.html
+as well as by "blalor" who posted some scope trace pictures:
+  http://www.flickr.com/photos/blalor/3876765214/in/photostream/
 
 
 
