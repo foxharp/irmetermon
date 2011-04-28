@@ -1,0 +1,34 @@
+
+
+interesting pins on the attiny44:  (see also attiny44pinout.png)
+
+    - RX and TX must be on the ICP and OC1A pins, for suart.c to work.
+	(and the rx/tx labels here are from the point of view of the AVR)
+    - TX, RX, Vcc, and Gnd all connect to an FTDI USB-to-serial converter
+    - it's useful to keep mosi, miso, and /reset as clear of other uses
+	as possible.
+    - the IR phototransistor emitter could connect to any ADC, the
+	others are useful for debugging (with scope, or LED)
+    - using the internal oscillator is taking a chance when generating
+	serial output.  if it's a problem (in cold winter or hot summer),
+	then a crystal will be necessary.
+
+            +------------------------------+
+	    |                              |
+            +----------||----------+       c
+            |          C1          |        Q1 phototransistor
+            |                      +-\/\/--e     (see schematic.adc)
+            |       --------       |  R1   |
+            +- Vcc |1     14| gnd -+       |
+         xtal1,pb0 |2     13| pa0,adc0 ----+
+         xtal2,pb1 |3     12| pa1,adc1
+            /reset |4     11| pa2,adc2
+               pb2 |5     10| pa3,adc3
+        rx,icp,pa7 |6      9| scl
+  tx,oc1a,mosi,pa6 |7      8| miso
+                    ---------
+		    ATtiny44
+
+
+
+
