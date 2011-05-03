@@ -26,7 +26,9 @@ OBJDUMP = $(CROSS)objdump
 CFLAGS = -c -Os -Wwrite-strings -Wall -mmcu=$(MCU)
 CFLAGS += -DF_CPU=$(F_CPU)UL
 CFLAGS += -Wa,-adhlns=$(<:%.c=%.lst)
+CFLAGS += -ffunction-sections
 LFLAGS = -mmcu=$(MCU)
+LFLAGS += -Wl,--gc-sections -Wl,--print-gc-sections
 
 HOSTCC = gcc
 
