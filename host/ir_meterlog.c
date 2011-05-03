@@ -48,8 +48,6 @@
 
 #define LOG_FILENAME_PATTERN "watt-hours.%y-%m-%d-%A.log"
 
-void write_watts_now(void);
-
 char *me;
 int verbose, testing;
 char *logdir = "/tmp";
@@ -134,19 +132,17 @@ int get_recent_watts(void)
 
 	watts = (int) ((3600.0 / t) + 0.5);
 	if (verbose)
-		printf("watts: dividing %f by %f = %d\n", 3600.0, t, watts);
+		printf("watts: dividing %f by %f = %d watts\n", 3600.0, t, watts);
 	return watts;
 }
 
 void write_watts_now(void)
 {
 	FILE *f;
+	int watts = get_recent_watts();
 
-	if (testing) {
-		printf("would write to %s:", LOG_WATTS_NOW_FILE);
-		printf("%d\n", get_recent_watts());
+	if (testing)
 		return;
-	}
 
 	f = fopen(LOG_WATTS_NOW_FILE ".tmp", "w");
 	if (!f) {
@@ -155,7 +151,7 @@ void write_watts_now(void)
 		return;
 	}
 
-	fprintf(f, "%d\n", get_recent_watts());
+	fprintf(f, "%d\n", watts);
 
 	fclose(f);
 	if (rename(LOG_WATTS_NOW_FILE ".tmp", LOG_WATTS_NOW_FILE)) {
@@ -197,11 +193,13 @@ void log_wH(char *file, time_t now, int watt_hours)
 {
 	FILE *f;
 
-	if (testing) {
-		printf("would log to %s: ", file);
+	if (verbose) {
+		printf("%slog to %s: ", testing ? "would " : "", file);
 		printf("%s %d\n", log_string(now), watt_hours);
-		return;
 	}
+
+	if (testing)
+		return;
 
 	f = fopen(file, "a");
 	if (!f) {
