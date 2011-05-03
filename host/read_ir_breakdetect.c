@@ -140,6 +140,15 @@ int main(int argc, char *argv[])
 
 	setlinebuf(stdout);
 
+
+
+#warning buggy code -- see comments
+
+	// there's something wrong the interaction of this loop, and
+	// the pipe to ir_meterlog.  the timestamped events sent
+	// to stdout seem to be delayed by a full pulse for some reason
+	// that i don't understand right now.  -pgf
+
 	while (1) {
 		n = read(ir_fd, &brk, 1);
 		if (n != 1) {
