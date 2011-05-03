@@ -39,25 +39,25 @@
 #include <sys/time.h>
 
 
-// #define LOG_IMMED_DIR "/var/run/irmetermon/watts_now"
-#define LOG_WATTS_NOW_FILE "/tmp/watts_now"
+#define LOG_WATTS_NOW_FILE "watts_now"
 #define WATTS_MIN_SAMPLES 3		// want at least this many samples to average...
 #define WATTS_MIN_PERIOD 15		// ...over at least this many seconds of data
 
-// #define LOG_KWH_MINUTE_DIR   "/var/local/irmetermon/minute/"
-#define LOG_KWH_MINUTE_DIR	"/tmp/wH-by-minute/"
-// #define LOG_KWH_TEN_MINUTE_DIR "/var/local/irmetermon/tenminute/"
-#define LOG_KWH_TEN_MINUTE_DIR	"/tmp/wH-by-ten-minute/"
+#define LOG_KWH_MINUTE_DIR	"wH-by-minute/"
+#define LOG_KWH_TEN_MINUTE_DIR	"wH-by-ten-minute/"
 
 #define LOG_FILENAME_PATTERN "watt-hours.%y-%m-%d-%A.log"
 
 void write_watts_now(void);
 
 char *me;
+int verbose, testing;
+char *logdir = "/tmp";
 
 void usage(void)
 {
-	fprintf(stderr, "usage: %s (no arguments)\n", me);
+	fprintf(stderr, "usage: %s [-v] [-t] \n", me);
+	fprintf(stderr, "  -v for verbose, -t for test (no logs)\n");
 	exit(1);
 }
 
@@ -72,9 +72,8 @@ static unsigned char rcnt;
 
 void save_recent(struct timeval *tv)
 {
-	write_watts_now();
-	// leave rcnt pointing at most recent entry
-	// printf("adding sample rcnt %d\n", rcnt);
+	if (verbose)
+		printf("adding sample %d, time is %ld\n", rcnt, (long) tv->tv_sec);
 	recent[rcnt++ & (NSAMP - 1)] = *tv;
 }
 
@@ -92,7 +91,8 @@ double get_recent_avg_delta(void)
 
 	i = 0;
 	while (i < rcnt && i < NSAMP) {
-		thentvp = &recent[(rcnt - 1 - i++) & (NSAMP - 1)];
+		i++;
+		thentvp = &recent[(rcnt - i) & (NSAMP - 1)];
 		interval = timeval_diff(nowtv, thentvp);
 
 		// stop when we have enough samples, and enough time...
@@ -108,13 +108,16 @@ double get_recent_avg_delta(void)
 	if (i < 1)
 		return 0;
 
-	// printf("dividing  %f  by (%d - 1)\n", interval, i);
+	if (verbose)
+		printf("interval: dividing %f by %d = %f\n",
+			   interval, i, interval / i);
 	return interval / i;
 }
 
 int get_recent_watts(void)
 {
 	double t;
+	int watts;
 
 	/* math is hard.  we get a tick once per watt-hour, and the ticks
 	 * are N seconds apart.  that's:
@@ -129,12 +132,21 @@ int get_recent_watts(void)
 	if (t == 0)
 		return 0;
 
-	return (3600.0 / t) + 0.5;
+	watts = (int) ((3600.0 / t) + 0.5);
+	if (verbose)
+		printf("watts: dividing %f by %f = %d\n", 3600.0, t, watts);
+	return watts;
 }
 
 void write_watts_now(void)
 {
 	FILE *f;
+
+	if (testing) {
+		printf("would write to %s:", LOG_WATTS_NOW_FILE);
+		printf("%d\n", get_recent_watts());
+		return;
+	}
 
 	f = fopen(LOG_WATTS_NOW_FILE ".tmp", "w");
 	if (!f) {
@@ -144,6 +156,7 @@ void write_watts_now(void)
 	}
 
 	fprintf(f, "%d\n", get_recent_watts());
+
 	fclose(f);
 	if (rename(LOG_WATTS_NOW_FILE ".tmp", LOG_WATTS_NOW_FILE)) {
 		fprintf(stderr, "%s: renaming to %s: %m\n", me,
@@ -183,6 +196,12 @@ char *log_string(time_t t)
 void log_wH(char *file, time_t now, int watt_hours)
 {
 	FILE *f;
+
+	if (testing) {
+		printf("would log to %s: ", file);
+		printf("%s %d\n", log_string(now), watt_hours);
+		return;
+	}
 
 	f = fopen(file, "a");
 	if (!f) {
@@ -322,18 +341,41 @@ void loop(void)
 		/* ten-minute logs */
 		interval_log(&ten_minute_log_info, wh_tick->tv_sec);
 
+		/* "instant" consumption */
+		write_watts_now();
+
 		/* save "instant consumption" data */
 		save_recent(wh_tick);
+
 	}
 }
 
 int main(int argc, char *argv[])
 {
+	int opt;
 
 	me = basename(argv[0]);
 
-	if (argc > 1)
-		usage();
+	while ((opt = getopt(argc, argv, "vtd:")) != -1) {
+		switch (opt) {
+		case 'v':
+			verbose = 1;
+			break;
+		case 't':
+			testing = 1;
+			break;
+		case 'd':
+			logdir = optarg;
+			break;
+		default:				/* '?' */
+			usage();
+		}
+	}
+
+	if (chdir(logdir) < 0) {
+		fprintf(stderr, "%s: can't chdir to %s (%m)\n", me, logdir);
+		exit(1);
+	}
 
 	mkdir(LOG_KWH_MINUTE_DIR, 0755);
 	mkdir(LOG_KWH_TEN_MINUTE_DIR, 0755);
