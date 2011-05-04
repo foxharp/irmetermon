@@ -122,16 +122,6 @@ void monitor(void)
 	unsigned int i;
 	unsigned char cmd, m;
 
-	static char adc_show;
-	static time_t adc_show_time;
-
-	if (adc_show) {
-		if (check_timer(adc_show_time, 100)) {
-			show_adc();
-			adc_show_time = get_ms_timer();
-		}
-	}
-
 	if (!getline())
 		return;
 
@@ -146,8 +136,7 @@ void monitor(void)
 		break;
 
 	case 'A':
-		adc_show = gethex();
-		adc_show_time = get_ms_timer();
+		show_adc();
 		break;
 
 	case 'm':

@@ -91,14 +91,10 @@ ISR(ADC_vect)
 
 void show_adc(void)
 {
-#if 0
-	sputstring("adc_counter: ");
-	puthex16(adc_counter);
-	sputchar('\n');
-#endif
-
-	sputstring("filtered: ");
+	sputstring("filt: ");
 	puthex16(filtered);
+	sputstring("raw: ");
+	puthex(ADCH);
 	sputchar('\n');
 }
 
