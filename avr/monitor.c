@@ -137,14 +137,12 @@ void monitor(void)
 
 	case 'A':
 		show_adc();
+		show_pulse();
+		sputchar('\n');
 		break;
 
 	case 'm':
 		use_median = gethex();
-		break;
-
-	case 'u':
-		up_only = gethex();
 		break;
 
 	case 's':

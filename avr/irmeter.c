@@ -21,6 +21,12 @@
 #define PULSE_LEN	10			// milliseconds
 
 time_t led_time;
+time_t now;
+
+// these are all for debugging:
+time_t fell;
+unsigned char pre_rise, post_rise, pre_fall, post_fall;
+unsigned char fellc;
 
 #ifdef IRMETER_ADAFRUITU4
 # define PORTLED PORTE
@@ -129,14 +135,28 @@ void puthex32(long l)
 	puthex((l >> 0) & 0xff);
 }
 
+void show_pulse()
+{
+	puthex32(fell);
+	sputchar(':');
+	puthex(pre_rise);
+	sputchar('^');
+	puthex(post_rise);
+	sputchar(',');
+	puthex(pre_fall);
+	sputchar(fellc);
+	puthex(post_fall);
+}
 
-void found_pulse(time_t now)
+void found_pulse(void)
 {
 	static unsigned long index;
 	led_flash();
 	puthex32(index++);
 	sputchar(':');
 	puthex32(now);
+	sputchar(' ');
+	show_pulse();
 	sputchar('\n');
 }
 
@@ -231,7 +251,7 @@ int medianfilter3(int val)
 
 #define abs(a) (((a) >= 0) ? (a) : -(a))
 
-int about_time(int went_up, int now)
+int about_time(int went_up)
 {
 	// within 1ms of expected pulse length?
 	int diff = ((now - went_up) - PULSE_LEN);
@@ -242,14 +262,12 @@ int about_time(int went_up, int now)
 
 unsigned int adc_fastdump;
 char use_median;
-char up_only;
 char step_size;
 
 void tracker(void)
 {
 	static int old;
 	static time_t up;
-	time_t now;
 	int delta;
 	int new;
 
@@ -282,24 +300,32 @@ void tracker(void)
 		puthex(filtered);
 		sputchar(')');
 	}
+	// don't report until adc and averages have settled.
+	if (now < 100) {
+		old = filtered;
+		return;
+	}
 
 	delta = filtered - old;
 
-	if (up_only) {
-		if (delta > step_size) {
-			found_pulse(now);
-		}
-	} else {
-		if (!up && delta > step_size) {
-			up = now;
-		} else if (up && about_time(up, now) && delta < -(step_size / 2)) {
-			up = 0;
-			// don't report until adc and averages have settled.
-			if (now > 100)
-				found_pulse(now);
-		} else if (up && now - up > 50) {
-			up = 0;
-		}
+	if (!up && delta > step_size) {
+		pre_rise = old;
+		post_rise = filtered;
+		up = now;
+	} else if (up && about_time(up) && delta < -(step_size / 2)) {
+		up = 0;
+		pre_fall = old;
+		post_fall = filtered;
+		fell = now;
+		fellc = 'v';
+		found_pulse();
+	} else if (up && now - up > 50) {
+		pre_fall = old;
+		post_fall = filtered;
+		fell = now;
+		fellc = 'X';
+		found_pulse();
+		up = 0;
 	}
 	old = filtered;
 }
