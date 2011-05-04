@@ -63,16 +63,20 @@ void usage(void)
  * immediate consumption ("watts now") support
  */
 
-#define NSAMP 128				// power of two, big enough to hold as many
-			 // ticks as we'll ever get in one averaging period.
+// NSAMP should be power of two, big enough to hold as many
+// ticks as we'll ever get in one averaging period.
+#define NSAMP 128
+// we do modulo math on the array index, so we can increment it forever.
+#define mod(rindex) ((rindex) & (NSAMP-1))
 static struct timeval recent[NSAMP];
-static unsigned char rcnt;
+static unsigned long ri;
 
 void save_recent(struct timeval *tv)
 {
 	if (verbose)
-		printf("adding sample %d, time is %ld\n", rcnt, (long) tv->tv_sec);
-	recent[rcnt++ & (NSAMP - 1)] = *tv;
+		printf("adding sample %ld, time is %ld\n",
+			   mod(ri), (long) tv->tv_sec);
+	recent[mod(ri++)] = *tv;
 }
 
 double timeval_diff(struct timeval *a, struct timeval *b)
@@ -88,9 +92,9 @@ double get_recent_avg_delta(void)
 	double interval = 0;
 
 	i = 0;
-	while (i < rcnt && i < NSAMP) {
+	while (i < ri && i < NSAMP) {
 		i++;
-		thentvp = &recent[(rcnt - i) & (NSAMP - 1)];
+		thentvp = &recent[mod(ri - i)];
 		interval = timeval_diff(nowtv, thentvp);
 
 		// stop when we have enough samples, and enough time...
