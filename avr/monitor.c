@@ -136,8 +136,11 @@ void monitor(void)
 		break;
 
 	case 'A':
+		sputstring("now: ");
+		puthex32(get_ms_timer());
+		sputchar('\n');
 		show_adc();
-		show_pulse();
+		show_pulse(1);
 		sputchar('\n');
 		break;
 

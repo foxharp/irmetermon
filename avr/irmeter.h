@@ -10,7 +10,7 @@ void irmeter_init(void);
 void led_handle(void);
 void led_flash(void);
 void show_adc(void);
-void show_pulse(void);
+void show_pulse(char full);
 void tracker(void);
 
 

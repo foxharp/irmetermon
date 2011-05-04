@@ -83,7 +83,7 @@ void init_adc(void)
 }
 
 unsigned int adc_counter;
-int filtered;
+unsigned char filtered;
 
 unsigned char new_adc, adc_avail;
 
@@ -98,8 +98,8 @@ ISR(ADC_vect)
 void show_adc(void)
 {
 	sputstring("filt: ");
-	puthex16(filtered);
-	sputstring("raw: ");
+	puthex(filtered);
+	sputstring(" raw: ");
 	puthex(ADCH);
 	sputchar('\n');
 }
@@ -135,10 +135,12 @@ void puthex32(long l)
 	puthex((l >> 0) & 0xff);
 }
 
-void show_pulse()
+void show_pulse(char full)
 {
-	puthex32(fell);
-	sputchar(':');
+	if (full) {
+	    puthex32(fell);
+	    sputchar(':');
+	}
 	puthex(pre_rise);
 	sputchar('^');
 	puthex(post_rise);
@@ -156,7 +158,7 @@ void found_pulse(void)
 	sputchar(':');
 	puthex32(now);
 	sputchar(' ');
-	show_pulse();
+	show_pulse(0);
 	sputchar('\n');
 }
 
@@ -266,7 +268,7 @@ char step_size;
 
 void tracker(void)
 {
-	static int old;
+	static unsigned char old;
 	static time_t up;
 	int delta;
 	int new;
@@ -334,6 +336,7 @@ void irmeter_init(void)
 {
 	use_median = 5;
 	step_size = STEP_SIZE;
+	fellc = '?';
 
 	init_adc();
 	init_led();
