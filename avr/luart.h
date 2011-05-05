@@ -17,4 +17,3 @@ void sputstring(const char *s);
 
 void luart_run(void);
 void luart_init(void);
-void luart_deinit(void);
