@@ -370,8 +370,12 @@ gccversion :
 
 
 # Program the device.
+oprogram: $(TARGET).hex $(TARGET).eep
+	# $(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 program: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+	avrdude -p m32u4 -P /dev/ttyACM0 -c avr109 $(AVRDUDE_WRITE_FLASH) 
+program1: $(TARGET).hex $(TARGET).eep
+	avrdude -p m32u4 -P /dev/ttyACM1 -c avr109 $(AVRDUDE_WRITE_FLASH) 
 
 flip: $(TARGET).hex
 	batchisp -hardware usb -device $(MCU) -operation erase f
