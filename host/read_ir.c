@@ -37,6 +37,7 @@
 #include <errno.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <time.h>
 #include <sys/time.h>
 
 
@@ -46,13 +47,17 @@ void usage(char *me)
 {
 	fprintf(stderr,
 			"usage: '%s tty-name'\n"
-			" use '%s -' to read from stdin\n"
-			" use '%s /dev/tty' to test interactively\n", me, me, me);
+			" -p N  say 'log pulse diags to fd N'\n"
+			" for tty-name, use '-' to read from stdin\n"
+			"  and use '/dev/tty' to test interactively\n", me);
 	exit(1);
 }
 
 struct termios oldterm[1], newterm[1];
 int ir_fd;
+int pulse_fd;
+FILE *ir_fp;
+FILE *pulse_fp;
 int is_tty;
 
 void restore_tty(void)
@@ -67,22 +72,59 @@ void restore_tty_sighandler(int n)
 	exit(1);
 }
 
-void loop(FILE * fp)
+struct tm *localtime_wrapper(time_t t)
+{
+	static time_t last_t;
+	static struct tm local_tm;
+
+	if (t != last_t) {
+		localtime_r(&t, &local_tm);
+		last_t = t;
+	}
+	return &local_tm;
+
+}
+
+char *log_string(time_t t)
+{
+	static char date[50];
+	static time_t last_t;
+
+	if (t != last_t) {
+		strftime(date, sizeof(date), "%D %R", localtime_wrapper(t));
+		last_t = t;
+	}
+	return date;
+}
+
+void loop(void)
 {
 	int n;
 	struct timeval tv;
 	unsigned int index, tstamp;
 	unsigned int last_index = 0;
+	unsigned int pre_rise, post_rise, pre_fall, post_fall;
+	unsigned char fellc;
 
 	while (1) {
-		n = fscanf(fp, "%x:%x ", &index, &tstamp);
-		if (n != 2) {
+		// 00000004:000066ab 46^51,53X63
+		// 00000005:000066b5 68^76,f7vec
+		n = fscanf(ir_fp, " %x:%8x %2x^%2x,%2x%c%2x", &index, &tstamp,
+			&pre_rise, &post_rise, &pre_fall, &fellc, &post_fall);
+		if (n != 2 && n != 7) {
 			fprintf(stderr, "Bad scanf from tty (%d), quitting\n", n);
 			exit(1);
 		}
-		// we don't currently use the timestamp reported from the micro
 
+		// we don't currently use the reported timestamp 
 		gettimeofday(&tv, 0);
+
+		if (n == 7 && pulse_fp) { // have rise/fall info
+		    fprintf(pulse_fp, "%s: 0x%02x ^ 0x%02x,   0x%02x %c 0x%02x\n",
+			log_string(tv.tv_sec),
+			pre_rise, post_rise, pre_fall, fellc, post_fall);
+		}
+
 		printf("s0x%lx u0x%lx i%d l%d\n",
 			   (unsigned long) tv.tv_sec, (unsigned long) tv.tv_usec,
 			   index, last_index);
@@ -93,19 +135,32 @@ void loop(FILE * fp)
 
 int main(int argc, char *argv[])
 {
-	FILE *ir_fp;
+	int opt;
 
 	me = basename(argv[0]);
 
-	if (argc == 1 || (argv[1][0] == '-' && argv[1][1] != '\0'))
-		usage(argv[0]);
+	while ((opt = getopt(argc, argv, "p:")) != -1) {
+		switch (opt) {
+		case 'p':
+			pulse_fd = atoi(optarg);
+			if (pulse_fd == 0)
+				usage(argv[0]);
+			pulse_fp = fdopen(pulse_fd, "a");
+			break;
+		default:
+		    fprintf(stderr, "bad opt is 0x%02x\n", opt);
+			usage(argv[0]);
+		}
+	}
 
-	if (!strcmp(argv[1], "-")) {
+	if (optind >= argc) {
+		usage(argv[0]);
+	} else if (!strcmp(argv[optind], "-")) {
 		is_tty = 0;
 		ir_fd = 0;
 	} else {
 		is_tty = 1;
-		ir_fd = open(argv[1], O_RDONLY);
+		ir_fd = open(argv[optind], O_RDONLY);
 		if (ir_fd < 0) {
 			fprintf(stderr, "%s: opening given tty: %m\n", me);
 			exit(1);
@@ -147,7 +202,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	loop(ir_fp);
+	loop();
 
 	return 0;
 
