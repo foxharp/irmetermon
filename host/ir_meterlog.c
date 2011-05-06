@@ -362,6 +362,7 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case 'v':
 			verbose = 1;
+			setbuf(stdout, 0);
 			break;
 		case 't':
 			testing = 1;
