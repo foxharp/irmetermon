@@ -15,7 +15,7 @@
     (Part of the trouble is that the input impedance of typical
     serial converters is very low -- most are spec'ed at 5Kohms,
     which limits the effective resistance to ground you can get
-    with R1.)
+    with R1.  This in turn affects the transistor gain.)
 
 
 

@@ -4,36 +4,38 @@ irmetermon -- Paul Fox, April 2011
 Many modern electric meters deployed in the US now have wireless
 connectivity to enable the electric utility to read them from a
 vehicle in the street, rather than requiring someone to approach
-each meter physically.
+each meter physically.  While in principle one might be able to
+get access to the meter's data via the electric utility's radio
+interface, a) the equipment would be expensive, and b) the data
+stream is likely (hopefully!) encrypted.
 
 Whether for testing convenience, or required for calibration
 purposes, these meters also all seem to be equipped with an
 infrared LED that emits one pulse for every watt-hour consumed. 
 (Think of this pulse as the modern equivalent of the spinning
-disk that existed in older meters.)
-
-While in principle one might be able to get access to the meter's
-data via the electric utility's radio interface, a) the equipment
-would be expensive, and b) the data stream is likely (hopefully!)
-encrypted.  It's far, far, easier to simply watch for pulses of
-the little IR led.  This project does just that.
+disk that existed in older meters.)  Rather than trying to
+use the radio interface, it's far, far, easier to simply watch
+for pulses of the little IR led.  This project does just that.
 
 I've played with two circuits for detecting the IR pulses using
 an IR phototransistor.  The simple schematics appear in the doc
 subdirectory (schematic.breakdetect and schematic.adc).  There's
-also a screen grab of a scope trace of the pulse in doc/irpulse.png.
+also a screen grab of a scope trace of the IR pulse in
+doc/irpulse.png.
 
 One circuit, which interfaces directly to a serial port, is quite
 simple, and the software to gather the input pulses equally
-trivial -- the s/w looks for ANSI "break" conditions on the serial
-port, which will occur once per pulse.  Unfortunately, I wasn't
-able to make that trivial circuit work across varying ambient
-light levels.  I'd be pleased if someone could make this scheme
-work -- the absence of a microcontroller makes this method much
-simpler, and therefore more available to more people.
+trivial -- the software looks for ANSI "break" conditions on the
+serial port, which will occur once per pulse.  (Using a unix tty
+driver, "break" conditions can be made to appear as if a NULL
+character was received on the port.)  Unfortunately, I wasn't able
+to make that trivial circuit work across varying ambient light
+levels.  I'd be pleased if someone could make this scheme work --
+the absence of a microcontroller makes this method much simpler,
+and therefore more accessible to more people.
 
 The other (more successful) circuit uses an Atmel AVR micro to
-monitor the phototransistor's output, and runs edge detection in
+monitor the phototransistor's output, and does edge detection in
 software to detect the pulses.  This makes it easy to ignore
 changes in ambient light.  Again, a serial interface is used,
 though in this case actual ASCII messages carry information about
