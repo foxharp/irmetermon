@@ -138,8 +138,8 @@ void puthex32(long l)
 void show_pulse(char full)
 {
 	if (full) {
-	    puthex32(fell);
-	    sputchar(':');
+		puthex32(fell);
+		sputchar(':');
 	}
 	puthex(pre_rise);
 	sputchar('^');
@@ -257,7 +257,7 @@ int about_time(int went_up)
 {
 	// within 1ms of expected pulse length?
 	int diff = ((now - went_up) - PULSE_LEN);
-	return abs(diff) <= 1;
+	return abs(diff) <= 2;
 }
 
 
