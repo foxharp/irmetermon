@@ -1,10 +1,12 @@
 
-# Makefile for avr programs
-# Paul Fox, April 2007, February 2009
+# this Makefile.lufa builds irmetermon for running on a UART-less
+# AVR, using the software uart code in suart.c.  i used the attiny44,
+# perhaps because i already owned one.  the suart code currently
+# wants a 16-bit timer, so using an attiny45/85 would require some
+# work (but i think it could be done).
 
 VERSION = $(shell date +%y%m%d-%H%M)
 
-# MCU = attiny2313
 MCU = attiny44
 F_CPU = 1000000
 OURDEFS = -DUSE_SUART -DIRMETERMON_VERSION="\"$(VERSION)\""
@@ -28,7 +30,7 @@ CFLAGS += -DF_CPU=$(F_CPU)UL
 CFLAGS += -Wa,-adhlns=$(<:%.c=%.lst)
 CFLAGS += -ffunction-sections
 LFLAGS = -mmcu=$(MCU)
-LFLAGS += -Wl,--gc-sections -Wl,--print-gc-sections
+LFLAGS += -Wl,--gc-sections -Wl
 
 HOSTCC = gcc
 
@@ -68,19 +70,6 @@ sizes: $(OBJS)
 	@echo Complete:
 	$(SIZE) $(PROG).out
 
-tarball: all clean
-	mkdir -p oldfiles
-	mv $(PROG)-*.hex *.tar.gz oldfiles || true
-	mv $(PROG).hex $(PROG)-$(VERSION).hex || true
-	ln -s $(PROG) ../$(PROG)-$(VERSION)
-	tar -C .. --dereference \
-	    --exclude CVS \
-	    --exclude oldfiles \
-	    --exclude web \
-	    --exclude '*.tar.gz' \
-	    -czf ../$(PROG)-$(VERSION).tar.gz $(PROG)-$(VERSION)
-	mv ../$(PROG)-$(VERSION).tar.gz .
-	rm -f ../$(PROG)-$(VERSION)
 
 program:
 	sudo avrdude -c usbtiny -p t44 -U $(PROG).hex

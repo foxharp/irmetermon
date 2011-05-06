@@ -1,3 +1,7 @@
+#
+# this Makefile.lufa builds irmetermon for running on a USB-capable
+# AVR.  i used the very nice atmega32u4 breakout board from adafruit.com.
+#
 
 VERSION = $(shell date +%y%m%d-%H%M)
 OURDEFS = -DUSE_LUFA -DIRMETERMON_VERSION="\"$(VERSION)\""
