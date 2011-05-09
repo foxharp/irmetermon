@@ -106,7 +106,7 @@ then
     ssh -x -p $sshport -q $sshuser@$sshhost "rm $webdir/*power.*.png"
     scp -P $sshport -q $TMP/*power.$which.png $sshuser@$sshhost:$webdir
     scp -P $sshport -q $TMP/index.html $sshuser@$sshhost:$webdir/power.html
-    scp -P $sshport -q $TMP/watts_now.html $sshuser@$sshhost:$webdir
+    scp -P $sshport -q $TMP/watts_now $sshuser@$sshhost:$webdir $TMP/watts_now.html 
 fi
 
 # copy locally
@@ -116,5 +116,5 @@ then
     rm $WEB/*power.*.png
     cp $TMP/*power.$which.png $WEB
     cp $TMP/index.html $WEB
-    cp $TMP/watts_now.html $WEB
+    cp $TMP/watts_now $WEB $TMP/watts_now.html 
 fi
