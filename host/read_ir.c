@@ -105,13 +105,29 @@ void loop(void)
 	unsigned int last_index = 0;
 	unsigned int pre_rise, post_rise, pre_fall, post_fall;
 	unsigned char fellc;
+	int retries;
+
 
 	while (1) {
-		// 00000004:000066ab 46^51,53X63
-		// 00000005:000066b5 68^76,f7vec
-		n = fscanf(ir_fp, " %x:%8x %2x^%2x,%2x%c%2x", &index, &tstamp,
-				   &pre_rise, &post_rise, &pre_fall, &fellc, &post_fall);
-		if (n != 2 && n != 7) {
+		retries = 15;
+
+		/* AVR firmware sends:
+		 *  - incrementing index
+		 *  - timestamp
+		 *  - adc before and after pulse rise
+		 *  - adc before and after pulse fall -or- adc at pulse detect timeout
+		 * 00000004:000066ab 46^51,53X63
+		 * 00000005:000066b5 68^76,f7vec
+		 */
+		while (retries--) {
+			n = fscanf(ir_fp, " %x:%8x %2x^%2x,%2x%c%2x", &index, &tstamp,
+					   &pre_rise, &post_rise, &pre_fall, &fellc,
+					   &post_fall);
+			if (n == 2 || n || 7)
+				break;
+		}
+
+		if (retries <= 0) {
 			fprintf(stderr, "Bad scanf from tty (%d), quitting\n", n);
 			exit(1);
 		}
@@ -127,6 +143,7 @@ void loop(void)
 		printf("s0x%lx u0x%lx i%d l%d\n",
 			   (unsigned long) tv.tv_sec, (unsigned long) tv.tv_usec,
 			   index, last_index);
+
 		last_index = index;
 	}
 }
@@ -184,10 +201,6 @@ int main(int argc, char *argv[])
 		signal(SIGINT, restore_tty_sighandler);
 		signal(SIGQUIT, restore_tty_sighandler);
 		signal(SIGTERM, restore_tty_sighandler);
-
-
-		// newterm->c_iflag &= ~(IGNBRK | BRKINT | IGNPAR | PARMRK);
-		// newterm->c_lflag &= ~(ICANON);
 
 		if (cfsetspeed(newterm, B4800)
 			|| tcsetattr(ir_fd, TCSANOW, newterm)) {
