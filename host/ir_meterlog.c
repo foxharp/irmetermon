@@ -74,7 +74,7 @@ static unsigned long ri;
 void save_recent(struct timeval *tv)
 {
 	if (verbose)
-		printf("adding sample %ld, time is %ld\n",
+		fprintf(stderr, "adding sample %ld, time is %ld\n",
 			   mod(ri), (long) tv->tv_sec);
 	recent[mod(ri++)] = *tv;
 }
@@ -111,7 +111,7 @@ double get_recent_avg_delta(void)
 		return 0;
 
 	if (verbose)
-		printf("interval: dividing %f by %d = %f\n",
+		fprintf(stderr, "interval: dividing %f by %d = %f\n",
 			   interval, i, interval / i);
 	return interval / i;
 }
@@ -136,7 +136,7 @@ int get_recent_watts(void)
 
 	watts = (int) ((3600.0 / t) + 0.5);
 	if (verbose)
-		printf("watts: dividing %f by %f = %d watts\n", 3600.0, t, watts);
+		fprintf(stderr, "watts: dividing %f by %f = %d watts\n", 3600.0, t, watts);
 	return watts;
 }
 
@@ -198,8 +198,8 @@ void log_wH(char *file, time_t now, int watt_hours)
 	FILE *f;
 
 	if (verbose) {
-		printf("%slog to %s: ", testing ? "would " : "", file);
-		printf("%s %d\n", log_string(now), watt_hours);
+		fprintf(stderr, "%slog to %s: ", testing ? "would " : "", file);
+		fprintf(stderr, "%s %d\n", log_string(now), watt_hours);
 	}
 
 	if (testing)
@@ -362,7 +362,6 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case 'v':
 			verbose = 1;
-			setbuf(stdout, 0);
 			break;
 		case 't':
 			testing = 1;

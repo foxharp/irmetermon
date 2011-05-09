@@ -47,18 +47,17 @@ void usage(char *me)
 {
 	fprintf(stderr,
 			"usage: '%s tty-name'\n"
-			" -p N  say 'log pulse diags to fd N'\n"
-			" for tty-name, use '-' to read from stdin\n"
-			"  and use '/dev/tty' to test interactively\n", me);
+			" use -v for verbose.\n"
+			" for tty-name, use '-' to read from stdin.\n"
+			" (but use '/dev/tty' to test interactively)\n", me);
 	exit(1);
 }
 
 struct termios oldterm[1], newterm[1];
 int ir_fd;
-int pulse_fd;
 FILE *ir_fp;
-FILE *pulse_fp;
 int is_tty;
+int verbose;
 
 void restore_tty(void)
 {
@@ -134,8 +133,8 @@ void loop(void)
 		// we don't currently use the reported timestamp 
 		gettimeofday(&tv, 0);
 
-		if (n == 7 && pulse_fp) {	// have rise/fall info
-			fprintf(pulse_fp, "%s: 0x%02x ^ 0x%02x,   0x%02x %c 0x%02x\n",
+		if (n == 7 && verbose) {	// have rise/fall info
+			fprintf(stderr, "%s: 0x%02x ^ 0x%02x,   0x%02x %c 0x%02x\n",
 					log_string(tv.tv_sec),
 					pre_rise, post_rise, pre_fall, fellc, post_fall);
 		}
@@ -155,18 +154,10 @@ int main(int argc, char *argv[])
 
 	me = basename(argv[0]);
 
-	while ((opt = getopt(argc, argv, "p:")) != -1) {
+	while ((opt = getopt(argc, argv, "v")) != -1) {
 		switch (opt) {
-		case 'p':
-			pulse_fd = atoi(optarg);
-			if (pulse_fd == 0)
-				usage(argv[0]);
-			pulse_fp = fdopen(pulse_fd, "a");
-			if (!pulse_fp) {
-				fprintf(stderr, "fdopen of %d failed: %m\n", pulse_fd);
-				exit(1);
-			}
-			setbuf(pulse_fp, 0);
+		case 'v':
+			verbose = 1;
 			break;
 		default:
 			fprintf(stderr, "bad opt is 0x%02x\n", opt);

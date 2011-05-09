@@ -1,0 +1,4 @@
+#!/bin/sh
+
+read_ir -v 2>/tmp/read_ir.log | ir_meterlog -v 2>/tmp/ir_meterlog.log
+
