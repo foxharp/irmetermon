@@ -35,7 +35,7 @@ which=$$
 # $MYVARIALE`" into the plot script.  so set variables to
 # parameterize the individual plots.
 
-cat $minutelogs | tail -$(( 2 * 60)) >$TMP/2hr_wH	# data for this plot
+cat $minutelogs | plotfix | tail -$(( 2 * 60)) >$TMP/2hr_wH	# data for this plot
 rm -f $TMP/2hr_power.*.png				# clean up old plot(s)
 PLOT_TITLE="Last 2 hours"			\
 PLOT_DATAFILE=$TMP/2hr_wH			\
@@ -47,7 +47,7 @@ PLOT_XTIC_SECONDS=1800			\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
 
-cat $minutelogs | tail -$((12 * 60)) >$TMP/12hr_wH
+cat $minutelogs | plotfix | tail -$((12 * 60)) >$TMP/12hr_wH
 rm -f $TMP/12hr_power.*.png
 PLOT_TITLE="Last 12 hours"			\
 PLOT_DATAFILE=$TMP/12hr_wH			\
@@ -59,7 +59,7 @@ PLOT_XTIC_SECONDS=3600			\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
 
-cat $minutelogs | tail -$((36 * 60)) >$TMP/36hr_wH
+cat $minutelogs | plotfix | tail -$((36 * 60)) >$TMP/36hr_wH
 rm -f $TMP/36hr_power.*.png
 PLOT_TITLE="Last 36 hours"			\
 PLOT_DATAFILE=$TMP/36hr_wH			\
@@ -71,14 +71,14 @@ PLOT_XTIC_SECONDS=14400			\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
 
-cat $tenminutelogs >$TMP/week_wH
+cat $tenminutelogs | plotfix -i 10  >$TMP/week_wH
 rm -f $TMP/week_power.*.png
 PLOT_TITLE="Last 7 days"	\
 PLOT_DATAFILE=$TMP/week_wH \
 PLOT_OUTPUT=$TMP/week_power.$which.png \
 PLOT_wH_MINUTES=10 \
 PLOT_MAX_wH=5000 \
-PLOT_WITHSTYLE="with steps" \
+PLOT_WITHSTYLE="with lines" \
 PLOT_XTIC_SECONDS=43200	\
 PLOT_MINOR_XTICS=6	\
     gnuplot power.plot

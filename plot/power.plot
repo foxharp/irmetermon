@@ -1,5 +1,6 @@
 #
 set terminal png size 1150, 300
+#set terminal png size 3000, 300
 set output "`echo $PLOT_OUTPUT`"
 set noborder
 set xdata time
@@ -17,6 +18,8 @@ set xrange [ * : * ] noreverse nowriteback
 set yrange [ 0 : `echo $PLOT_MAX_wH` ] noreverse nowriteback
 set locale "C"
 set title "`echo $PLOT_TITLE`"
+# change 0 watt-hours to an illegal value, so it won't be plotted at all.
 plot "`echo $PLOT_DATAFILE`" \
-    using 1:($3 * 60. / `echo $PLOT_wH_MINUTES`.) \
+    using 1:(($3 != 0 ? $3 : 1/0) * 60. / `echo $PLOT_wH_MINUTES`.) \
     title "Watts" `echo $PLOT_WITHSTYLE`
+
