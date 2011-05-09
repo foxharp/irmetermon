@@ -9,6 +9,11 @@ avr:
 host:
 	make -C host all
 
+DEST=/usr/local/power
+install:
+	cd host; cp -a read_ir ir_meterlog plotfix acquire $(DEST)
+	cd plot; cp -a power power.plot index.html.template $(DEST)
+
 clean:
 	make -C avr clean
 	make -C host clean
