@@ -1,6 +1,8 @@
 #!/bin/sh
 
 TTY=${1:-/dev/ttyUSB0}
+DIR=/usr/local/power
 
-read_ir -v $TTY 2>>/tmp/read_ir.log | ir_meterlog -v 2>/tmp/ir_meterlog.log
+$DIR/read_ir -v $TTY 2>>/tmp/read_ir.log |
+    $DIR/ir_meterlog -v -d /var/local/power 2>/tmp/ir_meterlog.log
 
