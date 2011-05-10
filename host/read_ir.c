@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 		signal(SIGTERM, restore_tty_sighandler);
 
 		if (cfsetspeed(newterm, B4800)
-			|| tcsetattr(ir_fd, TCSANOW, newterm)) {
+			|| tcsetattr(ir_fd, TCSAFLUSH, newterm)) {
 			fprintf(stderr, "%s: setting attributes for tty: %m\n", me);
 			exit(1);
 		}
