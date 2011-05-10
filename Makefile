@@ -11,6 +11,8 @@ host:
 
 DEST=/usr/local/power
 install:
+	mv $(DEST)/read_ir $(DEST)/read_ir.old
+	mv $(DEST)/ir_meterlog $(DEST)/ir_meterlog.old
 	cd host; cp -a read_ir ir_meterlog plotfix acquire $(DEST)
 	cd plot; cp -a power power.plot index.html.template $(DEST)
 
