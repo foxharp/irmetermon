@@ -1,4 +1,6 @@
 #!/bin/sh
 
-read_ir -v 2>/tmp/read_ir.log | ir_meterlog -v 2>/tmp/ir_meterlog.log
+TTY=${1:-/dev/ttyUSB0}
+
+read_ir -v $TTY 2>>/tmp/read_ir.log | ir_meterlog -v 2>/tmp/ir_meterlog.log
 
