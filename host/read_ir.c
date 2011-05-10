@@ -120,9 +120,13 @@ void loop(void)
 		 */
 		while (retries--) {
 			n = fscanf(ir_fp, " %x:%8x %2x^%2x,%2x%c%2x", &index, &tstamp,
-					   &pre_rise, &post_rise, &pre_fall, &fellc,
-					   &post_fall);
-			if (n == 2 || n || 7)
+					   &pre_rise, &post_rise,
+					   &pre_fall, &fellc, &post_fall);
+			if (n == EOF) {
+				fprintf(stderr, "fscanf returns EOF, quitting.\n");
+				exit(1);
+			}
+			if (n == 2 || n == 7)
 				break;
 		}
 

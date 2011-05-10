@@ -319,18 +319,30 @@ void loop(void)
 	long s, u;
 	int i, l;
 	struct timeval wh_tick[1];
+	int badindex = 0;
 
 	while (1) {
 		r = scanf(" s0x%lx u0x%lx i%d l%d", &s, &u, &i, &l);
+		if (r == EOF) {
+			fprintf(stderr, "scanf returns EOF, quitting.\n");
+			exit(1);
+		}
 		if (r != 4 && r != 2) {
-			fprintf(stderr, "Short or failed read from pipe, quitting\n");
+			fprintf(stderr, "Short or failed read from pipe, quitting.\n");
 			exit(1);
 		}
 
 		if (r == 4) {
 			if (i != l + 1) {
-				fprintf(stderr,
-						"Reported pulse index mismatch %d and %d\n", i, l);
+				fprintf(stderr, "Reported pulse index "
+								"mismatch %d and %d\n", i, l);
+				if (badindex++ > 5) {
+					fprintf(stderr, "Too many index errors, quitting.\n");
+					exit(1);
+				}
+				continue;
+			} else {
+				badindex = 0;
 			}
 		}
 
