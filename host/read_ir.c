@@ -53,23 +53,10 @@ void usage(char *me)
 	exit(1);
 }
 
-struct termios oldterm[1], newterm[1];
 int ir_fd;
 FILE *ir_fp;
 int is_tty;
 int verbose;
-
-void restore_tty(void)
-{
-	if (is_tty)
-		tcsetattr(ir_fd, TCSAFLUSH, oldterm);
-}
-
-void restore_tty_sighandler(int n)
-{
-	restore_tty();
-	exit(1);
-}
 
 struct tm *localtime_wrapper(time_t t)
 {
@@ -94,6 +81,14 @@ char *log_string(time_t t)
 		last_t = t;
 	}
 	return date;
+}
+
+
+void flushline(FILE *fp)
+{
+	int c;
+	while ((c = fgetc(fp)) != EOF && c != '\n')
+	    ;
 }
 
 void loop(void)
@@ -128,6 +123,7 @@ void loop(void)
 			}
 			if (n == 2 || n == 7)
 				break;
+			flushline(ir_fp);
 		}
 
 		if (retries <= 0) {
@@ -184,21 +180,17 @@ int main(int argc, char *argv[])
 	}
 
 	if (is_tty) {
-		if (tcgetattr(ir_fd, oldterm)) {
+		struct termios term[1];
+
+		if (tcgetattr(ir_fd, term)) {
 			fprintf(stderr, "%s: getting attributes of tty: %m\n", me);
 			exit(1);
 		}
 
-		*newterm = *oldterm;
+		cfmakeraw(term);
 
-		atexit(restore_tty);
-		signal(SIGHUP, restore_tty_sighandler);
-		signal(SIGINT, restore_tty_sighandler);
-		signal(SIGQUIT, restore_tty_sighandler);
-		signal(SIGTERM, restore_tty_sighandler);
-
-		if (cfsetspeed(newterm, B4800)
-			|| tcsetattr(ir_fd, TCSAFLUSH, newterm)) {
+		if (cfsetspeed(term, B4800)
+			|| tcsetattr(ir_fd, TCSAFLUSH, term)) {
 			fprintf(stderr, "%s: setting attributes for tty: %m\n", me);
 			exit(1);
 		}
@@ -212,7 +204,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s: can't fdopen the ir file descriptor\n", me);
 		exit(1);
 	}
-
+	setlinebuf(ir_fp);
+	flushline(ir_fp);
 
 	loop();
 
