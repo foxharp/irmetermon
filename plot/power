@@ -4,26 +4,37 @@
 # as some of its datafiles
 cd $(dirname $0)
 
-# the power logs live in subdirectories here.  the "watts_now" file does too.
-LOGS=/var/local/power
+IRM_logdir=/var/local/power	# where are the power logs?
+IRM_tmp=/tmp/power		# create temporary files here
 
-# put temporary files here, before copying them to be web-accessible.
-TMP=/tmp/power
-mkdir -p $TMP
+IRM_ssh_to_remote=false		# should we copy remotely?
+IRM_sshhost=myserver		# remote server name
+IRM_sshport=myport		# remote server port
+IRM_sshuser=myremoteuser	# remote server user
+IRM_webdir=/my/remote/path	# path on remote host
+
+IRM_cp_to_local=false		# should we copy locally?
+IRM_local_dest=/my/local/path	# path on local host
+
+# fetch user overrides for the IRM_xxxx variables
+test -f config && . config
+
+
+mkdir -p $IRM_tmp
 
 # since this will often run in the background, e.g., from cron, keep
 # a log, and a copy of stderr, for when things go wrong.
 # keep a copy of 
-exec 2>$TMP/power.stderr
+exec 2>$IRM_tmp/power.stderr
 set -x  # turn on tracing
 
 # knowing who ran the script can help debug permission issues.
 id >&2
 
 # need at most two days worth of by-minute logs for the 36 hour plot
-minutelogs=$(ls $LOGS/wH-by-minute/watt-hours*day.log | tail -2 )
+minutelogs=$(ls $IRM_logdir/wH-by-minute/watt-hours*day.log | tail -2 )
 # need at most seven days worth of by-ten-minute logs for the weeklong plot
-tenminutelogs=$(ls $LOGS/wH-by-ten-minute/watt-hours*day.log | tail -7 )
+tenminutelogs=$(ls $IRM_logdir/wH-by-ten-minute/watt-hours*day.log | tail -7 )
 
 
 # make the plot names unique, which helps avoid browser caching issues,
@@ -35,52 +46,52 @@ which=$$
 # $MYVARIALE`" into the plot script.  so set variables to
 # parameterize the individual plots.
 
-cat $minutelogs | plotfix | tail -$(( 2 * 60)) >$TMP/2hr_wH	# data for this plot
-rm -f $TMP/2hr_power.*.png				# clean up old plot(s)
+cat $minutelogs | ./plotfix | tail -$(( 2 * 60)) >$IRM_tmp/2hr_wH	# data for this plot
+rm -f $IRM_tmp/2hr_power.*.png				# clean up old plot(s)
 PLOT_TITLE="Last 2 hours"			\
-PLOT_DATAFILE=$TMP/2hr_wH			\
-PLOT_OUTPUT=$TMP/2hr_power.$which.png	\
+PLOT_DATAFILE=$IRM_tmp/2hr_wH			\
+PLOT_OUTPUT=$IRM_tmp/2hr_power.$which.png	\
 PLOT_wH_MINUTES=1				\
 PLOT_MAX_wH=5000				\
-PLOT_WITHSTYLE="with impulses"		\
-PLOT_XTIC_SECONDS=1800			\
+PLOT_WITHSTYLE="with impulses"			\
+PLOT_XTIC_SECONDS=1800				\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
 
-cat $minutelogs | plotfix | tail -$((12 * 60)) >$TMP/12hr_wH
-rm -f $TMP/12hr_power.*.png
+cat $minutelogs | ./plotfix | tail -$((12 * 60)) >$IRM_tmp/12hr_wH
+rm -f $IRM_tmp/12hr_power.*.png
 PLOT_TITLE="Last 12 hours"			\
-PLOT_DATAFILE=$TMP/12hr_wH			\
-PLOT_OUTPUT=$TMP/12hr_power.$which.png	\
+PLOT_DATAFILE=$IRM_tmp/12hr_wH			\
+PLOT_OUTPUT=$IRM_tmp/12hr_power.$which.png	\
 PLOT_wH_MINUTES=1				\
 PLOT_MAX_wH=5000				\
 PLOT_WITHSTYLE="with lines"			\
-PLOT_XTIC_SECONDS=3600			\
+PLOT_XTIC_SECONDS=3600				\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
 
-cat $minutelogs | plotfix | tail -$((36 * 60)) >$TMP/36hr_wH
-rm -f $TMP/36hr_power.*.png
+cat $minutelogs | ./plotfix | tail -$((36 * 60)) >$IRM_tmp/36hr_wH
+rm -f $IRM_tmp/36hr_power.*.png
 PLOT_TITLE="Last 36 hours"			\
-PLOT_DATAFILE=$TMP/36hr_wH			\
-PLOT_OUTPUT=$TMP/36hr_power.$which.png	\
+PLOT_DATAFILE=$IRM_tmp/36hr_wH			\
+PLOT_OUTPUT=$IRM_tmp/36hr_power.$which.png	\
 PLOT_wH_MINUTES=1				\
 PLOT_MAX_wH=5000				\
 PLOT_WITHSTYLE="with lines"			\
-PLOT_XTIC_SECONDS=14400			\
+PLOT_XTIC_SECONDS=14400				\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
 
-cat $tenminutelogs | plotfix -i 10  >$TMP/week_wH
-rm -f $TMP/week_power.*.png
-PLOT_TITLE="Last 7 days"	\
-PLOT_DATAFILE=$TMP/week_wH \
-PLOT_OUTPUT=$TMP/week_power.$which.png \
-PLOT_wH_MINUTES=10 \
-PLOT_MAX_wH=5000 \
-PLOT_WITHSTYLE="with lines" \
-PLOT_XTIC_SECONDS=43200	\
-PLOT_MINOR_XTICS=6	\
+cat $tenminutelogs | ./plotfix -i 10  >$IRM_tmp/week_wH
+rm -f $IRM_tmp/week_power.*.png
+PLOT_TITLE="Last 7 days"			\
+PLOT_DATAFILE=$IRM_tmp/week_wH			\
+PLOT_OUTPUT=$IRM_tmp/week_power.$which.png	\
+PLOT_wH_MINUTES=10				\
+PLOT_MAX_wH=5000				\
+PLOT_WITHSTYLE="with lines"			\
+PLOT_XTIC_SECONDS=43200				\
+PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
 
 
@@ -93,28 +104,26 @@ fix_index()
 	-e "s/NOW/$(echo $(date +'%A %m\/%d at %H:%M'))/"
 }
 
-fix_index <index.html.template >$TMP/index.html
-
+fix_index <index.html.template >$IRM_tmp/index.html
 
 # copy to remote webserver, using ssh
-if true
+if [ "$IRM_ssh_to_remote" = true ]
 then
-    sshhost=mywebserver
-    sshport=22
-    sshuser=mywebserverusername
-    webdir=/var/web/home/power	# path on remote host
-    ssh -x -p $sshport -q $sshuser@$sshhost "rm $webdir/*power.*.png"
-    scp -P $sshport -q $TMP/*power.$which.png $sshuser@$sshhost:$webdir
-    scp -P $sshport -q $TMP/index.html $sshuser@$sshhost:$webdir/power.html
-    scp -P $sshport -q $TMP/watts_now $sshuser@$sshhost:$webdir $TMP/watts_now.html 
+    ssh -x -p $IRM_sshport -q $IRM_sshuser@$IRM_sshhost \
+    	"rm $IRM_webdir/*power.*.png"
+    scp -P $IRM_sshport -q $IRM_tmp/*power.$which.png \
+    	$IRM_sshuser@$IRM_sshhost:$IRM_webdir
+    scp -P $IRM_sshport -q $IRM_tmp/index.html \
+    	$IRM_sshuser@$IRM_sshhost:$IRM_webdir/power.html
+    scp -P $IRM_sshport -q watts_now \
+    	$IRM_sshuser@$IRM_sshhost:$IRM_webdir/watts_now.html 
 fi
 
 # copy locally
-if true
+if [ "$IRM_cp_to_local" = true ]
 then
-    WEB=/var/www/serviceberry/html/power
-    rm $WEB/*power.*.png
-    cp $TMP/*power.$which.png $WEB
-    cp $TMP/index.html $WEB
-    cp $TMP/watts_now $WEB $TMP/watts_now.html 
+    rm $IRM_local_dest/*power.*.png
+    cp $IRM_tmp/*power.$which.png $IRM_local_dest
+    cp $IRM_tmp/index.html $IRM_local_dest
+    cp watts_now $IRM_local_dest/watts_now.html 
 fi

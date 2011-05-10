@@ -1,8 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-TTY=${1:-/dev/ttyUSB0}
-DIR=/usr/local/power
+# the script is expected to live in the same directory
+# as some of its datafiles
+cd $(dirname $0)
 
-$DIR/read_ir -v $TTY 2>>/tmp/read_ir.log |
-    $DIR/ir_meterlog -v -d /var/local/power 2>/tmp/ir_meterlog.log
+IRM_tty=/dev/ttyUSB0		# the device the AVR is attached to
+IRM_logdir=/var/local/power	# this is where we will accumlate data
+
+# fetch user overrides for the IRM_xxxx variables
+test -f config && . config
+
+./read_ir -v $IRM_tty 2>>/tmp/read_ir.log |
+    ./ir_meterlog -v -d $IRM_logdir 2>/tmp/ir_meterlog.log
 
