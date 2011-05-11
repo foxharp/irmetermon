@@ -79,7 +79,7 @@ PLOT_wH_MINUTES=1				\
 PLOT_MAX_wH=5000				\
 PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=14400				\
-PLOT_MINOR_XTICS=6				\
+PLOT_MINOR_XTICS=4				\
     gnuplot power.plot
 
 cat $tenminutelogs | ./plotfix -i 10  >$IRM_tmp/week_wH
@@ -91,7 +91,7 @@ PLOT_wH_MINUTES=10				\
 PLOT_MAX_wH=5000				\
 PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=43200				\
-PLOT_MINOR_XTICS=6				\
+PLOT_MINOR_XTICS=2				\
     gnuplot power.plot
 
 
