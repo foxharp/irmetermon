@@ -16,6 +16,15 @@ install:
 	cd host; cp -a read_ir ir_meterlog plotfix acquire $(DEST)
 	cd plot; cp -a power power.plot index.html.template $(DEST)
 
+diff_install:
+	@for f in host/read_ir host/ir_meterlog host/plotfix host/acquire \
+	    plot/power plot/power.plot plot/index.html.template ;\
+	 do \
+	    diff -u $$f /usr/local/power; \
+	    true; \
+	 done
+
+
 clean:
 	make -C avr clean
 	make -C host clean
