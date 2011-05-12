@@ -54,6 +54,11 @@ makes more sense to keep 10 minute logs long-term.) In addition,
 a simple file is continuously maintained which records the
 current 15-second averaged power consumption.
 
+There are more detailed construction and operation notes in the
+doc directory in "Installation".
+
+paul
+
 ----------
 
 Thanks where thanks is due -- I was inspired to tackle this by
