@@ -50,9 +50,10 @@ the serial port, timestamps it, and forwards it across a pipe to
 ir_meterlog.c, which does the logging.  Daily logs are kept on
 both a 1 minute and 10 minute basis.  (Disk is cheap, and while 1
 minute logs are very interesting on a daily basis, it probably
-makes more sense to keep 10 minute logs long-term.) In addition,
+makes more sense to keep 10 minute logs long-term.)  In addition,
 a simple file is continuously maintained which records the
-current 15-second averaged power consumption.
+current power consumption, based on the timing of the most recent two
+pulses.
 
 There are more detailed construction and operation notes in the
 doc directory in "Installation".

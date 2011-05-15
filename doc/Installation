@@ -78,9 +78,8 @@ Software
     generates processed power consumption logs in a configurable
     directory.  It also maintains a file called "watts_now", which
     contains a single number:  the instantaneous power consumption, in
-    watts, calculated on a 15-second average.  (Actually, it's
-    calculated on the average of at least 3 IR pulse intervals that
-    occur over at least 15 seconds, to a maximum of 60 seconds.)
+    watts, calculated from the time between the more recent two
+    pulses.  (As an aside, this is simple:  watts = 3600 / delta_t)
     
     The pipeline between read_ir and ir_meterlog is there partly to
     segregate functionality, but also so that data acquisition and

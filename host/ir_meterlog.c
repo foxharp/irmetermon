@@ -21,8 +21,8 @@
  * has been used.  Aggregates these "wH ticks" into two logs:  one
  * per-minute, and one per-ten-minutes -- the former logs are expected
  * to be cleaned up more quickly than the latter.  Also maintains
- * a "current power usage" file giving an "instant" usage -- actually
- * an average over the previous few (15?) seconds.
+ * a "current power usage" file giving an "instant" usage, based on
+ * the interval of the most recent two pulses.
  *
  */
 
@@ -63,87 +63,30 @@ void usage(void)
  * immediate consumption ("watts now") support
  */
 
-// NSAMP should be power of two, big enough to hold as many
-// ticks as we'll ever get in one averaging period.
-#define NSAMP 128
-// we do modulo math on the array index, so we can increment it forever.
-#define mod(rindex) ((rindex) & (NSAMP-1))
-static struct timeval recent[NSAMP];
-static unsigned long ri;
-
-void save_recent(struct timeval *tv)
-{
-	if (verbose)
-		fprintf(stderr, "adding sample %ld, time is %ld\n",
-			   mod(ri), (long) tv->tv_sec);
-	recent[mod(ri++)] = *tv;
-}
-
 double timeval_diff(struct timeval *a, struct timeval *b)
 {
 	return a->tv_sec - b->tv_sec + (a->tv_usec - b->tv_usec) / 1.e6;
 }
 
-double get_recent_avg_delta(void)
+void write_watts_now(struct timeval *this_tick)
 {
-	int i;
-	struct timeval nowtv[1], *thentvp;
-	gettimeofday(nowtv, 0);
-	double interval = 0;
+	double delta_t;
+	int watts;
+	FILE *f;
+	static struct timeval last_tick;
 
-	i = 0;
-	while (i < ri && i < NSAMP) {
-		i++;
-		thentvp = &recent[mod(ri - i)];
-		interval = timeval_diff(nowtv, thentvp);
-
-		// stop when we have enough samples, and enough time...
-		if (interval > WATTS_MIN_PERIOD && i >= WATTS_MIN_SAMPLES) {
-			break;
-		}
-		// ...but don't go back too far.
-		if (interval > WATTS_MIN_PERIOD * 4) {
-			break;
-		}
+	if (!last_tick.tv_sec) {
+	    last_tick = *this_tick;
+	    return;
 	}
 
-	if (i < 1)
-		return 0;
-
-	if (verbose)
-		fprintf(stderr, "interval: dividing %f by %d = %f\n",
-			   interval, i, interval / i);
-	return interval / i;
-}
-
-int get_recent_watts(void)
-{
-	double t;
-	int watts;
-
-	/* math is hard.  we get a tick once per watt-hour, and the ticks
-	 * are N seconds apart.  that's:
-	 *  (1/N) w-h per second
-	 * or:
-	 *  (3600/N) w-h per hour
-	 * or:
-	 *  (3600/N) watts.
-	 */
-	t = get_recent_avg_delta();
-
-	if (t == 0)
-		return 0;
-
-	watts = (int) ((3600.0 / t) + 0.5);
-	if (verbose)
-		fprintf(stderr, "watts: dividing %f by %f = %d watts\n", 3600.0, t, watts);
-	return watts;
-}
-
-void write_watts_now(void)
-{
-	FILE *f;
-	int watts = get_recent_watts();
+	delta_t = timeval_diff(this_tick, &last_tick);
+	last_tick = *this_tick;
+	watts = (int) ((3600.0 / delta_t) + 0.5);
+	if (verbose) {
+		fprintf(stderr, "tick is %ld, delta_t %f\n", this_tick->tv_sec, delta_t);
+		fprintf(stderr, "watts: %f / %f = %d watts\n", 3600.0, delta_t, watts);
+	}
 
 	if (testing)
 		return;
@@ -356,10 +299,7 @@ void loop(void)
 		interval_log(&ten_minute_log_info, wh_tick->tv_sec);
 
 		/* "instant" consumption */
-		write_watts_now();
-
-		/* save "instant consumption" data */
-		save_recent(wh_tick);
+		write_watts_now(wh_tick);
 
 	}
 }
