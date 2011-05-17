@@ -106,24 +106,33 @@ fix_index()
 
 fix_index <index.html.template >$IRM_tmp/index.html
 
+
+
 # copy to remote webserver, using ssh
 if [ "$IRM_ssh_to_remote" = true ]
 then
-    ssh -x -p $IRM_sshport -q $IRM_sshuser@$IRM_sshhost \
-    	"rm $IRM_webdir/*power.*.png"
     scp -P $IRM_sshport -q $IRM_tmp/*power.$which.png \
     	$IRM_sshuser@$IRM_sshhost:$IRM_webdir
     scp -P $IRM_sshport -q $IRM_tmp/index.html \
     	$IRM_sshuser@$IRM_sshhost:$IRM_webdir/power.html
     scp -P $IRM_sshport -q watts_now \
     	$IRM_sshuser@$IRM_sshhost:$IRM_webdir/watts_now.html 
+    # run the old cleanup script
+    ssh -x -p $IRM_sshport -q $IRM_sshuser@$IRM_sshhost \
+    	"sh $IRM_webdir/image_cleanup"
+    # create a new script which we'll run after the _next_ copy for cleanup
+    echo 'rm -f '$IRM_webdir'/*_power.'$which'.png' >$IRM_tmp/image_cleanup
+    scp -P $IRM_sshport -q $IRM_tmp/image_cleanup \
+    	$IRM_sshuser@$IRM_sshhost:$IRM_webdir
 fi
 
 # copy locally
 if [ "$IRM_cp_to_local" = true ]
 then
-    rm $IRM_local_dest/*power.*.png
     cp $IRM_tmp/*power.$which.png $IRM_local_dest
     cp $IRM_tmp/index.html $IRM_local_dest
     cp watts_now $IRM_local_dest/watts_now.html 
+    sh $IRM_local_dest/image_cleanup
+    echo 'rm -f '$IRM_local_dest'/*_power.'$which'.png' >$IRM_tmp/image_cleanup
+    cp $IRM_tmp/image_cleanup $IRM_local_dest
 fi
