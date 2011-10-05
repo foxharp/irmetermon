@@ -10,6 +10,6 @@ IRM_logdir=/var/local/power	# this is where we will accumlate data
 # fetch user overrides for the IRM_xxxx variables
 test -f config && . config
 
-./read_ir -v $IRM_tty 2>>/tmp/read_ir.log |
+./read_ir -rv $IRM_tty 2>>/tmp/read_ir.log |
     ./ir_meterlog -v -d $IRM_logdir 2>/tmp/ir_meterlog.log
 

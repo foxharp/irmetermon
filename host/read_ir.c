@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of
  * the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be
  * useful, but WITHOUT ANY WARRANTY; without even the implied
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
  * PURPOSE.  See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -35,6 +35,8 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
+#include <sched.h>
+#include <sys/mman.h>
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <time.h>
@@ -48,6 +50,7 @@ void usage(char *me)
 	fprintf(stderr,
 			"usage: '%s tty-name'\n"
 			" use -v for verbose.\n"
+			" use -r for real-time scheduling.\n"
 			" for tty-name, use '-' to read from stdin.\n"
 			" (but use '/dev/tty' to test interactively)\n", me);
 	exit(1);
@@ -88,7 +91,7 @@ void flushline(FILE *fp)
 {
 	int c;
 	while ((c = fgetc(fp)) != EOF && c != '\n')
-	    ;
+		;
 }
 
 void loop(void)
@@ -130,7 +133,7 @@ void loop(void)
 			fprintf(stderr, "Bad scanf from tty (%d), quitting\n", n);
 			exit(1);
 		}
-		// we don't currently use the reported timestamp 
+		// we don't currently use the reported timestamp
 		gettimeofday(&tv, 0);
 
 		if (n == 7 && verbose) {	// have rise/fall info
@@ -151,13 +154,17 @@ void loop(void)
 int main(int argc, char *argv[])
 {
 	int opt;
+	int realtime = 0;
 
 	me = basename(argv[0]);
 
-	while ((opt = getopt(argc, argv, "v")) != -1) {
+	while ((opt = getopt(argc, argv, "rv")) != -1) {
 		switch (opt) {
 		case 'v':
 			verbose = 1;
+			break;
+		case 'r':
+			realtime = 1;
 			break;
 		default:
 			fprintf(stderr, "bad opt is 0x%02x\n", opt);
@@ -198,6 +205,33 @@ int main(int argc, char *argv[])
 	}
 
 	setlinebuf(stdout);
+
+	if (realtime) {
+		struct sched_param sparam;
+		int min, max;
+
+		/* first, lock down all our memory */
+		long takespace[1024];
+		memset(takespace, 0, sizeof(takespace)); /* force paging */
+		if (mlockall(MCL_CURRENT|MCL_FUTURE) < 0) {
+			fprintf(stderr, "%s: unable to mlockall: %m\n", me);
+			exit(1);
+		}
+
+		/* then, raise our scheduling priority */
+		min = sched_get_priority_min(SCHED_FIFO);
+		max = sched_get_priority_max(SCHED_FIFO);
+
+		sparam.sched_priority = (min + max)/2; /* probably always 50 */
+		if (sched_setscheduler(0, SCHED_FIFO, &sparam)) {
+			fprintf(stderr, "%s: unable to set SCHED_FIFO: %m\n", me);
+			exit(1);
+		}
+
+		if (verbose)
+			fprintf(stderr, "memory locked, scheduler priority set\n");
+
+	}
 
 	ir_fp = fdopen(ir_fd, "r");
 	if (!ir_fp) {
