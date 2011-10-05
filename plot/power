@@ -15,6 +15,7 @@ IRM_webdir=/my/remote/path	# path on remote host
 
 IRM_cp_to_local=false		# should we copy locally?
 IRM_local_dest=/my/local/path	# path on local host
+IRM_use_staging_area=false	# should local target be recreated each time?
 
 # fetch user overrides for the IRM_xxxx variables
 test -f config && . config
@@ -129,10 +130,23 @@ fi
 # copy locally
 if [ "$IRM_cp_to_local" = true ]
 then
-    cp $IRM_tmp/*power.$which.png $IRM_local_dest
-    cp $IRM_tmp/index.html $IRM_local_dest
-    cp watts_now $IRM_local_dest/watts_now.html 
-    sh $IRM_local_dest/image_cleanup
-    echo 'rm -f '$IRM_local_dest'/*_power.'$which'.png' >$IRM_tmp/image_cleanup
-    cp $IRM_tmp/image_cleanup $IRM_local_dest
+    dest=$IRM_local_dest
+    if [ "$IRM_use_staging_area" ]
+    then
+	dest=$IRM_local_dest.staging
+    fi
+    mkdir -p $dest
+    cp $IRM_tmp/*power.$which.png $dest
+    cp $IRM_tmp/index.html $dest/power.html
+    cp watts_now $dest/watts_now.html 
+    if [ "$IRM_use_staging_area" ]
+    then
+	mv $IRM_local_dest $IRM_local_dest.prev
+	mv $IRM_local_dest.staging $IRM_local_dest
+	rm -r $IRM_local_dest.prev
+    else
+	sh $dest/image_cleanup
+	echo 'rm -f '$dest'/*_power.'$which'.png' >$IRM_tmp/image_cleanup
+	cp $IRM_tmp/image_cleanup $dest
+    fi
 fi
