@@ -1,8 +1,27 @@
 <html>
-<body>
-<h1>you can't change what you can't measure</h1>
+<head><title>
+irmetermon
+</title></head>
 
-<p1>
+<body bgcolor="98d470" text="000000">
+
+<h2>irmetermon</h2>
+
+<div style="width:600px;">
+
+<h3>sigh - <i>2012-06-06</i></h3>
+this page was reconstructed from backups of my original sourceforge-hosted
+Wordpress project blog.  since sourceforge retired that service
+(without warning!!!!), this is all that's left.  it was all much
+prettier before.  i think i won't be hosting
+projects at sourceforge after this. ]
+
+<p>
+<img src="emeter2.jpg">
+
+<h3>you can't change what you can't measure - <i>2011-04-28</i></h3>
+
+<p>
 i've wanted to be able to "see" our household electricity usage
 for a long time.  i confess, we probably use a lot of it -- i
 have too many computers turned on in too many rooms, we heat the
@@ -12,7 +31,7 @@ own, small, misguided way, i'd like to conserve, and the only way
 to change one's behavior is to know that that behavior _is_ in
 the first place.
 
-<p1>
+<p>
 what i really want is a giant bar graph on the kitchen wall
 telling me what our current electricity consumption is.  that's
 not going to happen right away, but i've started down that road
@@ -20,36 +39,36 @@ not going to happen right away, but i've started down that road
 cobbled together some web-accessible graphs that should show me
 the trends i'm interested in.
 
-<p1>
+<p>
 the sensor is based on something i discovered while <a
-href="http://davestech.blogspot.com/2008/02/itron-remote-read-electric-meter.html"
-target="_blank">surfing</a> and <a
-href="http://www.flickr.com/photos/blalor/3876765214/in/photostream/"
-target="_blank">googling</a>, a while ago:  many electric meters
+href="http://davestech.blogspot.com/2008/02/itron-remote-read-electric-meter.html">
+surfing</a> and <a href="http://www.flickr.com/photos/blalor/3876765214/in/photostream/">
+googling</a>, a while ago:  many electric meters
 emit a brief infrared pulse every time you use a watt-hour of
 energy.  if you're using 1000 watts, those pulses happen every
 couple of seconds.
 
-<p1>
-"<a href="https://sourceforge.net/projects/irmetermon/"
-target="_self">irmetermon</a>" is my project to detect, log, and
-graph those pulses.
+<p>
+"<a href="https://sourceforge.net/projects/irmetermon/">irmetermon</a>"
+is my project to detect, log, and graph those pulses.
 
-<p1>
+<!--
+<p>
 (btw, i'd love to get feedback, and suggestions or comments.  i
 assume the comment features work -- please try them!  that's one
 of the reasons i chose to publish this in blog format.
+-->
 
 
 
-<h1>a picture is worth a 1000 watts</h1>
+<h3>a picture is worth a 1000 watts - <i>2011-05-07</i></h3>
 
-<p1>
+<p>
 most of the effort in irmetermon went into physical construction,
 and the AVR firmware.  but at least some went into making the
 graphs look nice.  or, at least, presentable.
 
-<p1>
+<p>
 the regular bump every 2-1/4 hours is our (new) fridge.  the old
 fridge had more frequent bumps, and they were twice as high.  the
 spike at 11:30 saturday morning was the toaster.  the larger
@@ -60,44 +79,37 @@ sawing and drilling, and all the cellar lights were on as well.
 (some of the anomalies in the 7-day chart, like 0 power for a
 time, are from missing or bogus data during debugging.)
 
-<p1>
-(in the image below, the labels aren't clear.  <a
-href="/apps/wordpress/irmetermon/nfs/project/i/ir/irmetermon/uploads/2011/05/graph_5_7.png"
-target="_blank">here's</a> a full-size image, in a new window.)
+<p>
+(in the image below, the labels aren't clear.
+<a href="graph_5_7.png"> here's</a> a full-size image, in a new window.)
 
-<p1>
-[caption id="attachment_40" align="alignnone" width="458"
-caption="sample graphs of household consumption"]<img
-class="size-full wp-image-40" title="graph_5_7_39"
-src="/apps/wordpress/irmetermon/nfs/project/i/ir/irmetermon/uploads/2011/05/graph_5_7_39.png"
-alt="sample graphs of household consumption" width="458"
-height="502" />[/caption]
+<p>
+<img src="graph_5_7_39.png" alt="sample graphs of household consumption"
+width="458" height="502" />
 
-<p1>
+<p>
 we're working on trying to figure out what makes up the "base"
 usage of 400 or 500 watts.  turns out it comes from several
-computers, the garage door opener (<span style="text-decoration: 
-line-through;">15W, i think, though i want to double check</span>
-After checking again, only 3W), the stereo receiver that's always
+computers, the garage door opener (3W), the stereo receiver that's always
 on (25W), etc.  i've now hooked the stereo up to an X10
 controller, so it should be off more of the time.  i also
 realized that the outside lighting we leave on overnight consumes
 almost 100 watts, even though it's on a dimmer, and is set pretty
-low.  guess we need to do something about that
+low.  guess we need to do something about that.
 
 
 
 
-<h1>build a monitor -- $20 or less</h1>
+<h3>build a monitor -- $20 or less - <i>2011-05-12</i></h3>
 
-<p1>
+<p>
 building a power meter like the one i've built is really pretty
 easy.  if you've worked with microcontrollers, especially Atmel's
 AVR line of micros, before, it's especially easy.  i also suspect
 the code could be ported in some form or other to an Arduino,
 which would let you use that whole family of tools as well.
 
-<p1>
+<p>
 but i'm not going to go the "gory details" route.  the code
 includes a <a
 href="http://irmetermon.git.sourceforge.net/git/gitweb.cgi?p=irmetermon/irmetermon;a=blob_plain;f=README;hb=HEAD">README</a>
@@ -106,30 +118,42 @@ href="http://irmetermon.git.sourceforge.net/git/gitweb.cgi?p=irmetermon/irmeterm
 notes</a> that sketch the rough outlines, and i'll let you take
 it from there.
 
-<p1>
+<p>
 i do have some pictures that might help.  the assembled detector
 for the IR pulses that the electric meter is constantly putting
-out looks like this:  <a
+out looks like this: 
+<br>
+<a
 href="http://irmetermon.sourceforge.net/pic_3.html"><img
-src="http://irmetermon.sourceforge.net/thmb_3.jpg"></a> the box
+src="http://irmetermon.sourceforge.net/thmb_3.jpg"></a>
+<br>
+the box
 holds some minimal electronics (14 pin AVR micro, a resistor, a
 capacitor, and a phototransistor), the piece of rubber shades the
 meter, and the bungee cord holds it all together in a most
 attractive way.  okay, i was kidding about the last part.
 
-<p1>
-inside, it looks like this:  <a
+<p>
+inside, it looks like this: 
+<br>
+<a
 href="http://irmetermon.sourceforge.net/pic_6.html"><img
-src="http://irmetermon.sourceforge.net/thmb_6.jpg"></a> it's
+src="http://irmetermon.sourceforge.net/thmb_6.jpg"></a>
+<br>
+it's
 really pretty simple.
 
-<p1>
+<p>
+there are more pictures <a href="http://irmetermon.sourceforge.net/pix.html">here</a>.
+
+
+<p>
 the other end of the wire connects to a serial-to-USB converter. 
 i used one from sparkfun, because it was easy to connect to.  i
 don't have a picture of that, but it's an older version of <a
 href="http://www.sparkfun.com/products/9873">this</a>.
 
-<p1>
+<p>
 it all gets even easier (you can avoid much (but not all) of the
 soldering, and the need for the separate serial to USB converter,
 if you use a USB-capable AVR chip.  i prototyped the detector
@@ -139,16 +163,18 @@ board</a> from Adafruit Industries, which was a pleasure to use.
 (and how can you not like a product designed by a recent Wired <a
 href="http://www.wired.com/magazine/19-04">cover story</a>?)
 
-<p1>
+<!--
+<p>
 i'm sure there are simpler designs than mine.  anyone have one to
 share
+-->
 
 
 
 
-<h1>similar power monitor projects</h1>
+<h3>similar power monitor projects - <i>2011-05-14</i></h3>
 
-<p1>
+<p>
 Obviously I'm not the first to do a project like irmetermon.  In
 the hopes of making someone else's search easier, I thought I'd
 share links to the ones that I found earlier, as well as to the
@@ -156,7 +182,7 @@ ones I only learned of from the <a
 href="http://hackaday.com/2011/05/13/monitor-your-homes-power-usage-on-the-cheap/">
 hackaday.com</a> comment page.
 
-<p1>
+<p>
 First up, the projects most similar to mine -- these all detect
 the infrared pulses from the IR LED in the meter.:
 
@@ -198,7 +224,7 @@ the infrared pulses from the IR LED in the meter.:
 
 </ul>
 
-<p1>
+<p>
 And let's not forget the folks that don't have flashing LEDs on
 their meters, but still have spinning disks.  You can monitor
 those too, but it's trickier.  I only found one project that
@@ -209,7 +235,7 @@ attempts to do that:
 
 </ul>
 
-<p1>
+<p>
 Then there are projects that don't use the infrared LED, but
 instead measure current into the house with "current clamp"
 probes.  By their nature, these projects require a little more
@@ -235,16 +261,15 @@ change.)
     <a href="http://www.edcheung.com/automa/power.htm">
     http://www.edcheung.com/automa/power.htm</a></li>
 
-<li> I had a link to someone's <em>really</em> complete
+<li> Here's a link to someone's <em>really</em> complete
     monitoring setup -- they have a current probe on every
     circuit in their house.  Overkill for my needs, but I
-    understand the compulsion.  <span style="text-decoration: 
-    line-through;">I can't find the site right now,
-    unfortunately.</span> Ah, here it is:  <a
-    href="http://www.kondra.com/circuit/circuit.html">http://www.kondra.com/circuit/circuit.html</a></li>
+    understand the compulsion.
+    <a href="http://www.kondra.com/circuit/circuit.html">
+    http://www.kondra.com/circuit/circuit.html</a></li>
 
 </ul>
-<p1>
+<p>
 And then of course there are the commercial offerings.  There are
 lots of these.  You pay for packaging, convenience, hopefully
 slick UI features, etc.  If you go this route, be sure you can
@@ -253,7 +278,7 @@ instance (EM100B), you won't pay much (under $30 at amazon) but
 you don't get access to the data other than through the provided
 display -- no computer interface, no graphs.
 
-<p1>
+<p>
 One company deserves special mention (and not only because they
 self-promoted themselves in the hackaday comments -- grrr.). 
 They seem to be selling something that does exactly what
@@ -265,7 +290,7 @@ popular product that simply makes all the data available in XML
 format, and gives you an interface to Google powermeter along
 with it.
 
-<p1>
+<p>
 Oh -- speaking of Google's powermeter -- here's a set of
 instructions for how to hook your home-brew metering up to
 Google's monitoring API.  I haven't done this (and probably
@@ -274,10 +299,14 @@ interesting.) <a
 href="http://mosquitto.org/2010/06/google-powermeter-step-by-step/">
 http://mosquitto.org/2010/06/google-powermeter-step-by-step/</a>
 
-<p1>
+<!--
+<p>
 I'm sure there are a lot more home-brew/free/fun implementations
 of whole-house metering.  Mention them in a comment -- I'd love
 to hear about them.
+-->
+
+</div>
 
 </body>
 </html>
