@@ -1,0 +1,35 @@
+
+suart is licensed under GPL.  quoting from correspondence on
+avrfreaks.net:
+
+------------------
+
+From: 	paulfox
+To: 	danni
+Posted: 	Mar 18, 2011 - 11:33 PM
+Subject: 	may i republish your software uart code? 	 
+
+hello danni -- i think i would like to use your software uart code
+(parts of suart.zip) in a project.  i would like to publish that
+project, preferably under the GPL.  is that permissible?  or, if you
+don't wish it published under GPL, may i simply leave your "written
+by" line, and publish the result as a jointly copywritten program? 
+your code includes no license, so i want to be clear on your
+intentions.  (no matter what i do, you would get full credit for your
+contribution, of course!)
+
+many thanks,
+paul
+
+-----------------------------
+
+From: 	danni
+To: 	paulfox
+Posted: 	Mar 19, 2011 - 05:03 PM
+Subject: 	Re: may i republish your software uart code?
+
+GPL is o.k.
+
+Peter
+
+---------------------
