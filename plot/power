@@ -58,6 +58,9 @@ PLOT_WITHSTYLE="with impulses"			\
 PLOT_XTIC_SECONDS=1800				\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
+min_wH=$(sort -k3 -n $IRM_tmp/2hr_wH |
+	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
+echo $(($min_wH * 60)) > $IRM_tmp/2hr_min_W
 
 cat $minutelogs | ./plotfix | tail -$((12 * 60)) >$IRM_tmp/12hr_wH
 rm -f $IRM_tmp/12hr_power.*.png
@@ -70,6 +73,9 @@ PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=3600				\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
+min_wH=$(sort -k3 -n $IRM_tmp/12hr_wH |
+	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
+echo $(($min_wH * 60)) > $IRM_tmp/12hr_min_W
 
 cat $minutelogs | ./plotfix | tail -$((36 * 60)) >$IRM_tmp/36hr_wH
 rm -f $IRM_tmp/36hr_power.*.png
@@ -82,6 +88,9 @@ PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=14400				\
 PLOT_MINOR_XTICS=4				\
     gnuplot power.plot
+min_wH=$(sort -k3 -n $IRM_tmp/36hr_wH |
+	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
+echo $(($min_wH * 60)) > $IRM_tmp/36hr_min_W
 
 cat $tenminutelogs | ./plotfix -i 10  >$IRM_tmp/week_wH
 rm -f $IRM_tmp/week_power.*.png
@@ -94,6 +103,9 @@ PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=43200				\
 PLOT_MINOR_XTICS=2				\
     gnuplot power.plot
+min_wH=$(sort -k3 -n $IRM_tmp/week_wH |
+	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
+echo $(($min_wH * 6)) > $IRM_tmp/week_min_W
 
 
 # create index.html from template
@@ -102,6 +114,10 @@ fix_index()
     sed -e "s/DATETIME/$(date +'%a, %d %b %Y %H:%M:%S %Z')/" \
 	-e "s/WHICH/$which/g" \
 	-e "s/WATTSNOW/$(<watts_now)/g" \
+	-e "s/MIN2H/$(< $IRM_tmp/2hr_min_W )/g" \
+	-e "s/MIN12H/$(< $IRM_tmp/12hr_min_W)/g" \
+	-e "s/MIN36H/$(< $IRM_tmp/36hr_min_W)/g" \
+	-e "s/MINWEEK/$(< $IRM_tmp/week_min_W)/g" \
 	-e "s/NOW/$(echo $(date +'%A %m\/%d at %H:%M'))/"
 }
 
@@ -130,23 +146,19 @@ fi
 # copy locally
 if [ "$IRM_cp_to_local" = true ]
 then
-    dest=$IRM_local_dest
-    if [ "$IRM_use_staging_area" ]
-    then
-	dest=$IRM_local_dest.staging
-    fi
-    mkdir -p $dest
-    cp $IRM_tmp/*power.$which.png $dest
-    cp $IRM_tmp/index.html $dest/power.html
-    cp watts_now $dest/watts_now.html 
-    if [ "$IRM_use_staging_area" ]
-    then
-	mv $IRM_local_dest $IRM_local_dest.prev
-	mv $IRM_local_dest.staging $IRM_local_dest
-	rm -r $IRM_local_dest.prev
-    else
-	sh $dest/image_cleanup
-	echo 'rm -f '$dest'/*_power.'$which'.png' >$IRM_tmp/image_cleanup
-	cp $IRM_tmp/image_cleanup $dest
-    fi
+    staging=$IRM_local_dest.staging
+    mkdir -p $staging
+
+    cp $IRM_tmp/*power.$which.png $staging
+    cp $IRM_tmp/index.html $staging/power.html
+    cp watts_now $staging/watts_now.html 
+
+    echo 'rm -f *_power.'$which'.png' >$staging/image_cleanup
+
+    /usr/local/bin/shlock -l power
+    mv $IRM_local_dest $IRM_local_dest.prev
+    mv $IRM_local_dest.staging $IRM_local_dest
+    /usr/local/bin/shlock -u power
+
+    rm -r $IRM_local_dest.prev
 fi
