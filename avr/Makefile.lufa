@@ -34,7 +34,7 @@ OBJDIR = .
 
 
 # relative (!) path to the LUFA library
-LUFA_PATH = ./LUFA
+LUFA_PATH = ../../avr/LUFA101122
 # LUFA_PATH = ../../lufa-lib/trunk
 
 
