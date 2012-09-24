@@ -73,9 +73,12 @@ PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=3600				\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
+# use minute data for the 12 hour plot, but get the 
+# get the 12 hour minimum from the 10 minute data: more accurate.
+cat $tenminutelogs | ./plotfix -i 10 | tail -$((12 * 6)) >$IRM_tmp/12hr_wH
 min_wH=$(sort -k3 -n $IRM_tmp/12hr_wH |
 	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
-echo $(($min_wH * 60)) > $IRM_tmp/12hr_min_W
+echo $(($min_wH * 6)) > $IRM_tmp/12hr_min_W
 
 cat $minutelogs | ./plotfix | tail -$((36 * 60)) >$IRM_tmp/36hr_wH
 rm -f $IRM_tmp/36hr_power.*.png
@@ -88,9 +91,12 @@ PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=14400				\
 PLOT_MINOR_XTICS=4				\
     gnuplot power.plot
+# use minute data for the 36 hour plot, but get the 
+# get the 36 hour minimum from the 10 minute data: more accurate.
+cat $tenminutelogs | ./plotfix -i 10 | tail -$((36 * 6)) >$IRM_tmp/36hr_wH
 min_wH=$(sort -k3 -n $IRM_tmp/36hr_wH |
 	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
-echo $(($min_wH * 60)) > $IRM_tmp/36hr_min_W
+echo $(($min_wH * 6)) > $IRM_tmp/36hr_min_W
 
 cat $tenminutelogs | ./plotfix -i 10  >$IRM_tmp/week_wH
 rm -f $IRM_tmp/week_power.*.png
