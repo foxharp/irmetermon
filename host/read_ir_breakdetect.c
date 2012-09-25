@@ -23,7 +23,8 @@
  * electric utility meters.  The detector circuit is wired such
  * that it zeros the rxdata line (pin 2) of the serial port. 
  * This program detects "break" (all-zero) conditions on the tty
- * line (which are reported as characters numerically equal to 0), and reports their occurrence by writing a timestamp to
+ * line (which are reported as characters numerically equal to 0), and
+ * reports their occurrence by writing a timestamp to
  * stdout.
  *
  * Can do testing interactively:
