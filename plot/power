@@ -41,10 +41,9 @@ tenminutelogs=$(ls $IRM_logdir/wH-by-ten-minute/watt-hours*day.log | tail -7 )
 # make the plot names unique, which helps avoid browser caching issues,
 which=$$
 
-
 # gnuplot won't modify its plot based on command-line arguments,
 # but it can use environment variables if you insert "`echo
-# $MYVARIALE`" into the plot script.  so set variables to
+# $MYVARIABLE`" into the plot script.  so set variables to
 # parameterize the individual plots.
 
 cat $minutelogs | ./plotfix | tail -$(( 2 * 60)) >$IRM_tmp/2hr_wH	# data for this plot
@@ -58,9 +57,6 @@ PLOT_WITHSTYLE="with impulses"			\
 PLOT_XTIC_SECONDS=1800				\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
-min_wH=$(sort -k3 -n $IRM_tmp/2hr_wH |
-	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
-echo $(($min_wH * 60)) > $IRM_tmp/2hr_min_W
 
 cat $minutelogs | ./plotfix | tail -$((12 * 60)) >$IRM_tmp/12hr_wH
 rm -f $IRM_tmp/12hr_power.*.png
@@ -73,12 +69,6 @@ PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=3600				\
 PLOT_MINOR_XTICS=6				\
     gnuplot power.plot
-# use minute data for the 12 hour plot, but get the 
-# get the 12 hour minimum from the 10 minute data: more accurate.
-cat $tenminutelogs | ./plotfix -i 10 | tail -$((12 * 6)) >$IRM_tmp/12hr_wH
-min_wH=$(sort -k3 -n $IRM_tmp/12hr_wH |
-	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
-echo $(($min_wH * 6)) > $IRM_tmp/12hr_min_W
 
 cat $minutelogs | ./plotfix | tail -$((36 * 60)) >$IRM_tmp/36hr_wH
 rm -f $IRM_tmp/36hr_power.*.png
@@ -91,12 +81,6 @@ PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=14400				\
 PLOT_MINOR_XTICS=4				\
     gnuplot power.plot
-# use minute data for the 36 hour plot, but get the 
-# get the 36 hour minimum from the 10 minute data: more accurate.
-cat $tenminutelogs | ./plotfix -i 10 | tail -$((36 * 6)) >$IRM_tmp/36hr_wH
-min_wH=$(sort -k3 -n $IRM_tmp/36hr_wH |
-	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
-echo $(($min_wH * 6)) > $IRM_tmp/36hr_min_W
 
 cat $tenminutelogs | ./plotfix -i 10  >$IRM_tmp/week_wH
 rm -f $IRM_tmp/week_power.*.png
@@ -109,9 +93,22 @@ PLOT_WITHSTYLE="with lines"			\
 PLOT_XTIC_SECONDS=43200				\
 PLOT_MINOR_XTICS=2				\
     gnuplot power.plot
-min_wH=$(sort -k3 -n $IRM_tmp/week_wH |
-	grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1)
-echo $(($min_wH * 6)) > $IRM_tmp/week_min_W
+
+
+# generate daily minimum usage figures for the last week, from the
+# 10-minute logs.
+find_minimum()
+{
+    sort -k3 -n |
+        grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1
+}
+
+dailymins=;
+for x in $tenminutelogs
+do
+    dailymins="$dailymins$sep$(( 6 * $(./plotfix -i 10 < $x | find_minimum)))"
+    sep=', '
+done
 
 
 # create index.html from template
@@ -120,15 +117,12 @@ fix_index()
     sed -e "s/DATETIME/$(date +'%a, %d %b %Y %H:%M:%S %Z')/" \
 	-e "s/WHICH/$which/g" \
 	-e "s/WATTSNOW/$(<watts_now)/g" \
-	-e "s/MIN2H/$(< $IRM_tmp/2hr_min_W )/g" \
-	-e "s/MIN12H/$(< $IRM_tmp/12hr_min_W)/g" \
-	-e "s/MIN36H/$(< $IRM_tmp/36hr_min_W)/g" \
-	-e "s/MINWEEK/$(< $IRM_tmp/week_min_W)/g" \
+	-e "s/DAILYMINS/$dailymins/g" \
 	-e "s/NOW/$(echo $(date +'%A %m\/%d at %H:%M'))/"
 }
 
-fix_index <index.html.template >$IRM_tmp/index.html
 
+fix_index <index.html.template >$IRM_tmp/index.html
 
 
 # copy to remote webserver, using ssh
