@@ -109,7 +109,7 @@ void EVENT_USB_Device_ControlRequest(void)
 
 // Simple character i/o based on LUFA calls 
 static int hit_c;
-uint8_t sgetchar(void)
+uint8_t getch(void)
 {
 	return hit_c & 0xff;
 }
@@ -120,26 +120,26 @@ int kbhit(void)
 	return hit_c >= 0;
 }
 
-void sputchar(char c)
+void putch(char c)
 {
 	if (c == '\n')
-		sputchar('\r');
+		putch('\r');
 	CDC_Device_SendByte(&VirtualSerial_CDC_Interface, (uint8_t) c);
 }
 
 #if ! ALL_STRINGS_PROGMEM
-void sputstring(const char *s)
+void putstr(const char *s)
 {
 	while (*s)
-		sputchar(*s++);
+		putch(*s++);
 }
 #endif
 
-void sputstring_p(const prog_char * s)
+void putstr_p(const prog_char * s)
 {
 	char c;
 	while ((c = pgm_read_byte(s++)))
-		sputchar(c);
+		putch(c);
 }
 
 void luart_init(void)

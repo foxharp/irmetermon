@@ -40,23 +40,23 @@
 # error
 #endif
 
-void sputchar(char c);
-void sputstring_p(const prog_char * s);
+void putch(char c);
+void putstr_p(const prog_char * s);
 #if ! ALL_STRINGS_PROGMEM
-void sputstring(const char *s);
+void putstr(const char *s);
 #else
-#define sputstring(s) sputstring_p(PSTR(s))
+#define putstr(s) putstr_p(PSTR(s))
 #endif
 
 #ifndef NO_RECEIVE
 extern volatile unsigned char srx_done;
 #define kbhit()	(srx_done)		// true if byte received
-unsigned char sgetchar(void);
+unsigned char getch(void);
 #endif
 
 extern volatile unsigned char stx_count;
 #define stx_active() (stx_count)
 
 void suart_init(void);
-// void sputchar( unsigned char val );
+// void putch( unsigned char val );
 // void sputs_p( const prog_char *txt );

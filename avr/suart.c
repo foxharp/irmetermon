@@ -67,7 +67,7 @@ void suart_init(void)
 
 
 #ifndef NO_RECEIVE
-unsigned char sgetchar(void)	// get byte
+unsigned char getch(void)	// get byte
 {
 	while (!srx_done);			// wait until byte received
 	srx_done = 0;
@@ -115,10 +115,10 @@ SIGNAL(SIG_OUTPUT_COMPARE1B)
 #endif
 
 
-void sputchar(char val)			// send byte
+void putch(char val)			// send byte
 {
 	if (val == '\n')
-		sputchar('\r');
+		putch('\r');
 	while (stx_count);			// until last byte finished
 	stx_data = ~val;			// invert data for Stop bit generation
 	stx_count = 10;				// 10 bits: Start + data + Stop
@@ -126,18 +126,18 @@ void sputchar(char val)			// send byte
 
 
 #if ! ALL_STRINGS_PROGMEM
-void sputstring(const prog_char * s)	// send string
+void putstr(const prog_char * s)	// send string
 {
 	while (*s)
-		sputchar(*s++);
+		putch(*s++);
 }
 #endif
 
-void sputstring_p(const prog_char * s)
+void putstr_p(const prog_char * s)
 {
 	char c;
 	while ((c = pgm_read_byte(s++)))
-		sputchar(c);
+		putch(c);
 }
 
 

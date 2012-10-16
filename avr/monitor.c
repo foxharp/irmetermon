@@ -49,7 +49,7 @@ static char getline(void)
 	if (!kbhit())
 		return 0;
 
-	c = sgetchar();
+	c = getch();
 
 	// eat leading spaces
 	if (l == 0 && c == ' ')
@@ -59,23 +59,23 @@ static char getline(void)
 	if (l == 0 && (c == '+' || c == '-' || c == '=')) {
 		line[l++] = c;
 		line[l] = '\0';
-		sputchar('\r');			// retreat over the prompt
+		putch('\r');			// retreat over the prompt
 		return 1;
 	}
 
 	if (c == '\r' || c == '\n') {
 		// done
-		sputchar('\n');
-		sputchar('\r');
+		putch('\n');
+		putch('\r');
 		return 1;
 	}
 
-	sputchar(c);
+	putch(c);
 
 	// backspace
 	if (c == '\b' || c == DEL) {
-		sputchar(' ');
-		sputchar('\b');
+		putch(' ');
+		putch('\b');
 		if (l > 0)
 			l--;
 		line[l] = '\0';
@@ -89,9 +89,9 @@ static char getline(void)
 	}
 	// line too long
 	if (isprint(c)) {
-		sputchar('\b');
-		sputchar(' ');
-		sputchar('\b');
+		putch('\b');
+		putch(' ');
+		putch('\b');
 	}
 	return 0;
 }
@@ -113,7 +113,7 @@ static void prompt(void)
 {
 	l = 0;
 	line[0] = '\0';
-	sputchar('>');
+	putch('>');
 }
 
 
@@ -136,12 +136,12 @@ void monitor(void)
 		break;
 
 	case 'A':
-		sputstring("now: ");
+		putstr("now: ");
 		puthex32(get_ms_timer());
-		sputchar('\n');
+		putch('\n');
 		show_adc();
 		show_pulse(1);
-		sputchar('\n');
+		putch('\n');
 		break;
 
 	case 'm':
@@ -157,18 +157,18 @@ void monitor(void)
 		break;
 
 	case 'v':
-		sputstring(BANNER);
+		putstr(BANNER);
 		break;
 
 	case 'q':
 		for (i = 0; i < 20; i++)
-			sputstring(QUICKFOX);
+			putstr(QUICKFOX);
 		break;
 
 	case 'U':
 		for (i = 0; i < (80 * 20); i++)
-			sputchar('U');
-		sputchar('\n');
+			putch('U');
+		putch('\n');
 		break;
 
 	case 'e':
@@ -212,17 +212,17 @@ void monitor(void)
 			   (uint) * (unsigned char xdata *) addr);
 #else
 		puthex16(addr);
-		sputstring(": ");
+		putstr(": ");
 		if (addr_is_data)
 			puthex(*(unsigned char *) addr);
 		else
 			puthex(pgm_read_byte(addr));
-		sputchar('\n');
+		putch('\n');
 #endif
 		break;
 
 	default:
-		sputchar('?');
+		putch('?');
 	}
 
 	prompt();
@@ -240,19 +240,19 @@ void monitor(void)
 	if (!kbhit())
 		return;
 
-	c = sgetchar();
+	c = getch();
 
 #if TEST_RX
 	puthex(c);
-	sputchar(',');
-	sputchar(' ');
+	putch(',');
+	putch(' ');
 	return;
 #endif
 
 
 	switch (c) {
 	case 'v':
-		sputstring(BANNER);
+		putstr(BANNER);
 		break;
 
 	case 'a':
@@ -266,19 +266,19 @@ void monitor(void)
 
 	case 'x':
 		for (i = 0; i < 20; i++)
-			sputstring(QUICKFOX);
+			putstr(QUICKFOX);
 		break;
 
 	case 'U':
 		for (i = 0; i < (80 * 20); i++)
-			sputchar('U');
-		sputchar('\n');
+			putch('U');
+		putch('\n');
 		break;
 
 	case 's':
 		for (i = 0; i < (80 * 20); i++)
-			sputchar("0123456789abcdef"[(get_ms_timer() / 1000) & 0xf]);	/* last digit of time */
-		sputchar('\n');
+			putch("0123456789abcdef"[(get_ms_timer() / 1000) & 0xf]);	/* last digit of time */
+		putch('\n');
 		break;
 
 	case 'e':

@@ -21,13 +21,13 @@ void puthex(unsigned char i);
 void puthex16(unsigned int i);
 void puthex32(long l);
 
-unsigned char sgetchar(void);
-void sputchar(char c);
-void sputstring_p(const prog_char * s);
+unsigned char getch(void);
+void putch(char c);
+void putstr_p(const prog_char * s);
 #if ! ALL_STRINGS_PROGMEM
-void sputstring(const char *s);
+void putstr(const char *s);
 #else
-#define sputstring(s) sputstring_p(PSTR(s))
+#define putstr(s) putstr_p(PSTR(s))
 #endif
 
 void force_reboot(void);

@@ -53,9 +53,9 @@ ISR(TIM0_COMPA_vect)
 		led_flash();
 #if 0
 		extern unsigned int adc_counter;
-		sputstring("adccnt: ");
+		putstr("adccnt: ");
 		puthex16(adc_counter);
-		sputchar('\n');
+		putch('\n');
 #endif
 	}
 #endif

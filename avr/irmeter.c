@@ -97,11 +97,11 @@ ISR(ADC_vect)
 
 void show_adc(void)
 {
-	sputstring("filt: ");
+	putstr("filt: ");
 	puthex(filtered);
-	sputstring(" raw: ");
+	putstr(" raw: ");
 	puthex(ADCH);
-	sputchar('\n');
+	putch('\n');
 }
 
 void puthex(unsigned char i)
@@ -112,13 +112,13 @@ void puthex(unsigned char i)
 	i &= 0xf;
 
 	if (j >= 10)
-		sputchar(j + 'a' - 10);
+		putch(j + 'a' - 10);
 	else
-		sputchar(j + '0');
+		putch(j + '0');
 	if (i >= 10)
-		sputchar(i + 'a' - 10);
+		putch(i + 'a' - 10);
 	else
-		sputchar(i + '0');
+		putch(i + '0');
 }
 
 void puthex16(unsigned int i)
@@ -139,14 +139,14 @@ void show_pulse(char full)
 {
 	if (full) {
 		puthex32(fell);
-		sputchar(':');
+		putch(':');
 	}
 	puthex(pre_rise);
-	sputchar('^');
+	putch('^');
 	puthex(post_rise);
-	sputchar(',');
+	putch(',');
 	puthex(pre_fall);
-	sputchar(fellc);
+	putch(fellc);
 	puthex(post_fall);
 }
 
@@ -155,11 +155,11 @@ void found_pulse(void)
 	static unsigned long index;
 	led_flash();
 	puthex32(index++);
-	sputchar(':');
+	putch(':');
 	puthex32(now);
-	sputchar(' ');
+	putch(' ');
 	show_pulse(0);
-	sputchar('\n');
+	putch('\n');
 }
 
 static unsigned char vals[8];
@@ -286,8 +286,8 @@ void tracker(void)
 
 	if (adc_fastdump) {
 		puthex(new);
-		sputchar(' ');
-		sputchar("0123456789abcdef"[now & 0xf]);	/* last digit of time */
+		putch(' ');
+		putch("0123456789abcdef"[now & 0xf]);	/* last digit of time */
 	}
 
 	if (use_median == 5)
@@ -298,9 +298,9 @@ void tracker(void)
 		filtered = avgfilter(new);
 
 	if (adc_fastdump) {
-		sputchar('(');
+		putch('(');
 		puthex(filtered);
-		sputchar(')');
+		putch(')');
 	}
 	// don't report until adc and averages have settled.
 	if (now < 100) {
