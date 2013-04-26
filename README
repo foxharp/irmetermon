@@ -1,5 +1,6 @@
 
 irmetermon -- Paul Fox, April 2011
+============
 
 Many modern electric meters deployed in the US now have wireless
 connectivity to enable the electric utility to read them from a
@@ -19,8 +20,8 @@ for pulses of the little IR led.  This project does just that.
 
 I've played with two circuits for detecting the IR pulses using
 an IR phototransistor.  The simple schematics appear in the doc
-subdirectory (schematic.breakdetect and schematic.adc).  There's
-also a screen grab of a scope trace of the IR pulse in
+subdirectory (schematic.breakdetect.txt and schematic.adc.txt).
+There's also a screen grab of a scope trace of the IR pulse in
 doc/irpulse.png.
 
 One circuit, which interfaces directly to a serial port, is quite
