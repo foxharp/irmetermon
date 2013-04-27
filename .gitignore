@@ -1,0 +1,9 @@
+ID
+.dep
+*.o
+*.lst
+*.lss
+*.map
+*.out
+*.lst
+*.hex
