@@ -1,0 +1,37 @@
+# first three non-commentary lines become the directory
+# description for both the album page, and the upper-level
+# index.
+
+
+
+
+  
+Body: bgcolor="98d470" text="000000"
+Header: Construction photos for irmetermon
+Header: May 2011
+Header: <a href="https://github.com/foxharp/irmetermon">https://github.com/foxharp/irmetermon</a>
+# a line like this one will give the index page a title:
+Title: irmetermon
+
+# lines like this one will be included at the bottom of the
+# index page.  they only have to start with "Copyright:"
+# Copyright: All images Copyright 2011 by Paul Fox
+
+# a line like this will suppress lins to the parent index.html
+NoUpLink
+NoNumber
+IconsHere
+
+# picture caption format is:
+# <image-no>TAB<caption>
+# i.e. everything after the first tab becomes the caption.
+# e.g. "1	Julia, Paul, and Sam at the Beach"
+1	Prototype, using the Adafruit Atmega32u4 Breakout Board
+2	Closeup of the cylindrical light pipe, that emits the 10ms IR pulse.  Some cameras will show that pulse if you take a video.
+3	"Finished" installation.  I should replace that bungee cord.
+4	You can see the hole for the IR phototransistor in the rubber sheet.
+5	Closeup of the IR detector, peering out.  The box and rubber sheet are stuck together with double-sided tape, which is visible here.  I think the tape was for vinyl flooring.  
+6	The phototransistor was hot-glued in place.  Besides the IC, there are three components -- a filter cap, a resistor (variable, set to 20K) and the phototransistor.
+7	The wire exits through a tight notch drilled in the box.  By not cutting the short rim on the lid of the box (which is the bottom in this application), I hope I added some water resistance.
+
+Footer: <small><br><br><br><br><a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-sa/3.0/80x15.png" /></a><br />This <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/StillImage" rel="dct:type">work</span> by <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Paul Fox</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License</a></small>.

@@ -182,7 +182,7 @@ way.  Okay, I was kidding about the last part.
 Inside, it looks like this:
 ![ ]( pix/thmb_6.jpg ) [ (larger) ]( pix/pic_6.html )
 
-It's really pretty simple.  There are more pictures [ here. ]( pix/pix.html )
+It's really pretty simple.  There are more pictures [ here. ]( pix/index.html )
 
 The other end of the wire connects to a serial-to-USB converter. 
 I used one from sparkfun, because it was easy to connect to.  I
