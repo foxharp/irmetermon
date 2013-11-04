@@ -104,11 +104,13 @@ int main(int argc, char *argv[])
 		}
 
 		if (last_t && t - interval < last_t) {
+			/* this will unfortunately happen every autumn
+			 * at the end of daylight savings */
 			fprintf(stderr, "%s: time goes backwards at line '%s'\n", me,
 					line);
 			fprintf(stderr, "t %ld, last_t %ld\n", (long) t,
 					(long) last_t);
-			break;
+			continue;
 		}
 		// if we missed some log entries, fill them in.
 		if (last_t && t - interval > last_t) {
