@@ -103,10 +103,26 @@ find_minimum()
         grep -v ' 0$' | sed -e 's/.* \([0-9]\+\)/\1/' | head -1
 }
 
+# generate daily total usage figures for the last week, from the
+# 10-minute logs.
+find_totals()
+{
+    awk '{s+=$3} END {print s}'
+}
+
+sep=;
 dailymins=;
 for x in $tenminutelogs
 do
     dailymins="$dailymins$sep$(( 6 * $(./plotfix -i 10 < $x | find_minimum)))"
+    sep=', '
+done
+
+sep=;
+dailytots=;
+for x in $tenminutelogs
+do
+    dailytots="$dailytots$sep$( echo 1k $(( ( $(./plotfix -i 10 < $x | find_totals) + 50 ) / 100 ))  10 / p | dc )"
     sep=', '
 done
 
@@ -117,7 +133,8 @@ fix_index()
     sed -e "s/DATETIME/$(date +'%a, %d %b %Y %H:%M:%S %Z')/" \
 	-e "s/WHICH/$which/g" \
 	-e "s/WATTSNOW/$(<watts_now)/g" \
-	-e "s/DAILYMINS/$dailymins/g"
+	-e "s/DAILYMINS/$dailymins/g" \
+	-e "s/DAILYTOTS/$dailytots/g"
 }
 
 

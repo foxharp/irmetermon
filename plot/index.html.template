@@ -8,7 +8,9 @@
 
 Currently consuming WATTSNOW watts.  (DATETIME)
 <br>
-Daily mimimum consumption: DAILYMINS (oldest first, today last)
+Daily minimum consumption: DAILYMINS (oldest first, today last)
+<br>
+Daily total consumption (kWh): DAILYTOTS
 <br>
 <P>
 <IMG SRC="12hr_power.WHICH.png">
