@@ -6,11 +6,10 @@
 </HEAD>
 <BODY BGCOLOR="98D470" TEXT="000000"> 
 
-<!--
-<P>
-These graphs were created NOW (updated every minute).
--->
-Currently consuming WATTSNOW watts. (2hr/12hr/36hr/week minimum: MIN2H/MIN12H/MIN36H/MINWEEK
+Currently consuming WATTSNOW watts.  (DATETIME)
+<br>
+Daily mimimum consumption: DAILYMINS (oldest first, today last)
+<br>
 <P>
 <IMG SRC="12hr_power.WHICH.png">
 <P>

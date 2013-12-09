@@ -117,8 +117,7 @@ fix_index()
     sed -e "s/DATETIME/$(date +'%a, %d %b %Y %H:%M:%S %Z')/" \
 	-e "s/WHICH/$which/g" \
 	-e "s/WATTSNOW/$(<watts_now)/g" \
-	-e "s/DAILYMINS/$dailymins/g" \
-	-e "s/NOW/$(echo $(date +'%A %m\/%d at %H:%M'))/"
+	-e "s/DAILYMINS/$dailymins/g"
 }
 
 
