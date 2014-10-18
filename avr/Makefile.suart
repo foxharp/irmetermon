@@ -29,8 +29,9 @@ CFLAGS = -c -Os -Wwrite-strings -Wall -mmcu=$(MCU)
 CFLAGS += -DF_CPU=$(F_CPU)UL
 CFLAGS += -Wa,-adhlns=$(<:%.c=%.lst)
 CFLAGS += -ffunction-sections
+CFLAGS += -Wno-deprecated-declarations -D__PROG_TYPES_COMPAT__
 LFLAGS = -mmcu=$(MCU)
-LFLAGS += -Wl,--gc-sections -Wl
+# LFLAGS += -Wl,--gc-sections -Wl
 
 HOSTCC = gcc
 
