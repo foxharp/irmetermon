@@ -4,8 +4,8 @@ irmetermon -- electric utility meter reading using an AVR micro
 ============
 
 *This project uses an AVR microcontroller and a phototransistor to
-implement a circuit that allows reading power usage from some common
-household electric meters.*
+implement a circuit that allows monitoring power usage from some common
+residental household electricity meters.*
 
 Many modern electric meters deployed in the US now have wireless
 connectivity to enable the electric utility to read them from a
@@ -15,13 +15,13 @@ get access to the meter's data via the electric utility's radio
 interface, a) the equipment would be expensive, and b) the data
 stream is likely (hopefully!) encrypted.
 
-Whether for testing convenience, or required for calibration
-purposes, these meters also all seem to be equipped with an
-infrared LED that emits one pulse for every watt-hour consumed. 
-(Think of this pulse as the modern equivalent of the spinning
-disk that existed in older meters.)  Rather than trying to
-use the radio interface, it's far, far, easier to simply watch
-for pulses of the little IR led.  This project does just that.
+Whether for testing convenience, or required for calibration purposes,
+these meters (at least the Centron meters made by Itron) also all seem
+to be equipped with an infrared LED that emits one pulse for every
+watt-hour consumed.  (Think of this pulse as the modern equivalent of
+the spinning disk that existed in older meters.)  Rather than trying to
+use the radio interface, it's far, far, easier to simply watch for
+pulses of the little IR led.  This project does just that.
 
 I've played with two circuits for detecting the IR pulses using an IR
 phototransistor.  One is dead simple, and the other works reliably.
@@ -39,7 +39,7 @@ make that trivial circuit work across varying ambient light levels.
 I'd be pleased if someone could make this scheme work -- the absence
 of a microcontroller makes this method much simpler, and therefore
 more accessible to more people.  [ _Since writing this originally,
-I've heard of one user who did implement this -- their meter is in a
+I've heard from one user who did implement this -- their meter is in a
 dark location, which helped.  -pgf_ ]
 
 Reliable
@@ -277,10 +277,15 @@ change.)
 And then of course there are the commercial offerings.  There are lots
 of these.  You pay for packaging, convenience, hopefully slick UI
 features, etc.  If you go this route, be sure you can get access to
-your data.  With the Radio Shack product, for instance (EM100B), you
+your data.  With the Black and Decker product, for instance (EM100B), you
 won't pay much (under $30 at amazon) but you don't get access to the
 data other than through the provided display -- no computer interface,
 no graphs.
+
+There's a 2009 review of some commercial offerings here:
+    http://www.energycircle.com/learn/energy-monitoring/comparing-energy-monitors
+They take a look at the Wattvision, the SiteSage (previously eMonitor),
+the TED 5000-C, and a product called Blue Line.
 
 One company deserves special mention (and not only because they
 self-promoted themselves in the hackaday comments -- grrr.).  They
@@ -297,5 +302,6 @@ a set of instructions for how to hook your home-brew metering up to
 Google's monitoring API.  I haven't done this (and probably won't) but
 I thought it was interesting.  (Complicated, but interesting.)
 http://mosquitto.org/2010/06/google-powermeter-step-by-step/
+
 
 
