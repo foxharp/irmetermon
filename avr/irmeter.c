@@ -87,6 +87,11 @@ unsigned char filtered;
 
 unsigned char new_adc, adc_avail;
 
+/*
+ * the ADC is programmed to do repetitive reads.  i.e., every time we
+ * get a result from the ADC, we schedule a new conversion.  the
+ * result of the most recent conversion is always in 'new_adc'.
+ */
 ISR(ADC_vect)
 {
 	adc_counter++;
@@ -135,6 +140,25 @@ void puthex32(long l)
 	puthex((l >> 0) & 0xff);
 }
 
+/*
+ * find_pulse() and show_pulse() generate the reports sent to the
+ * host.  a line of text is generated for every pulse detected.  you
+ * can see the format of the line of text at line 120 of host/read_ir.c:
+ *
+ *      n = fscanf(ir_fp, " %x:%8x %2x^%2x,%2x%c%2x", &index, &tstamp,
+ *                         &pre_rise, &post_rise,
+ *                         &pre_fall, &fellc, &post_fall);
+ *
+ * there's a counter, followed by a timestamp (in hex), followed by
+ * four numbers.  the first pair (separated by the character '^') are the
+ * values read from the ADC both before and after the detection of the
+ * start of the pulse, and the second pair (which should be separated by
+ * 'v') are the values from the ADC before and after the fall of the
+ * pulse.  (unless the character separating those values was an 'X'
+ * instead of a 'v', in which case we never detected the pulse ending,
+ * so something's out of whack.)
+ */
+
 void show_pulse(char full)
 {
 	if (full) {
@@ -165,18 +189,6 @@ void found_pulse(void)
 static unsigned char vals[8];
 static unsigned char svals[8];
 
-#if STREAMING_AVG
-int avgfilter(int val)
-{
-	static int avg;
-
-#define AVG_DEPTH	4
-
-	avg = avg - (avg / AVG_DEPTH) + val;
-
-	return avg / AVG_DEPTH;
-}
-#else
 int avgfilter(int val)
 {
 	static unsigned char i;
@@ -184,17 +196,13 @@ int avgfilter(int val)
 #define NAVG	3
 
 	vals[i % NAVG] = val;
-//  if (i++ < NAVG)
-//      return val;
 	i++;
 	return (vals[0] + vals[1] + vals[2]) / NAVG;
 
 }
-#endif
 
 // nifty value swapper
 #define swap(a,b) {(a)=(b)^(a); (b)=(a)^(b); (a)=(b)^(a);}
-
 
 int median5(void)
 {
@@ -279,9 +287,21 @@ void tracker(void)
 	if (adc_fastdump)
 		adc_fastdump--;
 
+	/* fetch the most recent value from the ADC */
 	new = new_adc;
 	adc_avail = 0;
 
+	/*
+	 * the value in 'new' isn't used directly.  it's averaged in one
+	 * of three ways, using either a rolling average (avgfilter()), or
+	 * a median filter using either 3 or 5 samples.  i recommend
+	 * googling for what a median filter does -- they're good at
+	 * helping detect edges, which is what we're trying to do.  in any
+	 * case, the goal is to eliminate some of the natural noise we get
+	 * from the ADC, in order to reliably detect an edge, and not an
+	 * errant spike due a reflection of the sun from someone's
+	 * windshield who happens to drive past. 
+	 */
 	now = get_ms_timer();
 
 	if (adc_fastdump) {
